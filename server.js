@@ -502,6 +502,44 @@ app.post("/api/visitantes", async (req, res) => {
     return cadastrarFamilia(req, res);
 });
 
+
+// ======================================================
+// MARCAR TODOS COMO PRESENTES
+// ======================================================
+
+app.patch("/api/visitantes/status/todos", async (req, res) => {
+    try {
+        const momento = momentoSP();
+
+        const resultado = await pool.query(`
+            UPDATE pessoas
+            SET
+                entrou = TRUE,
+                horario = $1,
+                data_entrada = $2,
+                timestamp_entrada = $3::timestamptz
+            WHERE entrou = FALSE
+            RETURNING id
+        `, [
+            momento.hora,
+            momento.data,
+            momento.iso
+        ]);
+
+        avisarTodos();
+
+        return res.json({
+            ok: true,
+            atualizados: resultado.rowCount
+        });
+    } catch (erro) {
+        console.error("Erro ao marcar todos como presentes:", erro);
+        return res.status(500).json({
+            erro: "Não foi possível marcar todos como presentes."
+        });
+    }
+});
+
 // ======================================================
 // MARCAR OU DESFAZER ENTRADA
 // ======================================================
