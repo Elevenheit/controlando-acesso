@@ -1,0 +1,17 @@
+{
+  "name": "controle-acesso-evento",
+  "version": "2.0.0",
+  "description": "Sistema de controle de acesso com PostgreSQL/Supabase",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.16.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

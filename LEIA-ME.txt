@@ -1,0 +1,18 @@
+CONTROLE DE ACESSO - RENDER + SUPABASE
+
+Este pacote contém o front-end ORIGINAL do projeto (public/index.html) e um server.js
+adaptado para PostgreSQL/Supabase mantendo as mesmas rotas do projeto original:
+
+GET   /api/visitantes
+POST  /api/visitantes
+PATCH /api/visitantes/:id/status
+GET   /api/eventos
+GET   /exportar
+
+No Render, configure a variável DATABASE_URL com a Session Pooler do Supabase.
+Build command: npm install
+Start command: npm start
+
+Depois teste:
+/health
+/
