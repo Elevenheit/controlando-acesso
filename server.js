@@ -540,6 +540,64 @@ app.patch("/api/visitantes/status/todos", async (req, res) => {
     }
 });
 
+
+// ======================================================
+// MARCAR UMA FAMÍLIA INTEIRA COMO PRESENTE
+// ======================================================
+
+app.patch("/api/familias/:familiaCodigo/status", async (req, res) => {
+    try {
+        const familiaCodigo = limparTexto(req.params.familiaCodigo, 32);
+        const status = req.body?.status;
+
+        if (status !== "entrou") {
+            return res.status(400).json({
+                erro: "Status inválido."
+            });
+        }
+
+        if (!familiaCodigo) {
+            return res.status(400).json({
+                erro: "Família inválida."
+            });
+        }
+
+        const momento = momentoSP();
+
+        const resultado = await pool.query(`
+            UPDATE pessoas
+            SET
+                entrou = TRUE,
+                horario = $2,
+                data_entrada = $3,
+                timestamp_entrada = $4::timestamptz
+            WHERE familia_codigo = $1
+              AND entrou = FALSE
+            RETURNING id
+        `, [
+            familiaCodigo,
+            momento.hora,
+            momento.data,
+            momento.iso
+        ]);
+
+        avisarTodos();
+
+        return res.json({
+            ok: true,
+            atualizados: resultado.rowCount,
+            familiaCodigo
+        });
+
+    } catch (erro) {
+        console.error("Erro ao marcar família como presente:", erro);
+
+        return res.status(500).json({
+            erro: "Não foi possível marcar a família como presente."
+        });
+    }
+});
+
 // ======================================================
 // MARCAR OU DESFAZER ENTRADA
 // ======================================================
