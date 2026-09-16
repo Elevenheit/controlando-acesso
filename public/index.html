@@ -12,6 +12,12 @@
 
 <title>Controle de Acesso</title>
 
+<link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23ffffff'/%3E%3Cpath d='M13 25C15 10 27 3 47 7c-5 3-7 8-5 14z' fill='%23d83b3b'/%3E%3Cellipse cx='31' cy='31' rx='18' ry='16' fill='%2324a2e2'/%3E%3Ccircle cx='25' cy='28' r='2.4' fill='%2317303e'/%3E%3Ccircle cx='38' cy='28' r='2.4' fill='%2317303e'/%3E%3Cpath d='M18 36c1 17 27 24 30-3-7 5-9 0-16 5-5-5-9 1-14-2z' fill='%23ffffff' stroke='%23d9e8f0' stroke-width='1.5'/%3E%3Cpath d='M25 34c4 3 9 3 13 0' fill='none' stroke='%2317303e' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"
+>
+
 <style>
 
 /* =====================================================
@@ -648,7 +654,7 @@ input {
         var(--texto-secundario);
 
     font-size:
-        clamp(10px, .85vw, 12px);
+        clamp(14px, 1.15vw, 17px);
 
     font-weight: 750;
 
@@ -724,7 +730,7 @@ input {
 
 
 /* =====================================================
-   ADICIONAR CONVIDADO
+   ADICIONAR FAMÍLIA
 ===================================================== */
 
 .area-adicionar {
@@ -916,7 +922,7 @@ input {
 }
 
 
-.cpf {
+.detalhes {
 
     margin-top: 3px;
 
@@ -1314,7 +1320,34 @@ input {
 }
 
 
-.campo input:focus {
+.campo select {
+
+    width: 100%;
+    height: 50px;
+
+    border:
+        1px solid var(--borda);
+
+    border-radius:
+        11px;
+
+    padding:
+        0 13px;
+
+    outline: 0;
+
+    background:
+        white;
+
+    color:
+        var(--texto);
+
+    font-size: 15px;
+}
+
+
+.campo input:focus,
+.campo select:focus {
 
     border-color:
         var(--smurf-2);
@@ -1322,6 +1355,104 @@ input {
     box-shadow:
         0 0 0 3px
         rgba(36,162,226,.10);
+}
+
+
+.modal.modal-familia {
+
+    max-width:
+        760px;
+}
+
+
+.integrantes-cabecalho {
+
+    margin-top:
+        18px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+
+.integrantes-cabecalho strong {
+
+    font-size: 14px;
+}
+
+
+.integrante-linha {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(130px, 170px)
+        42px;
+
+    gap: 9px;
+
+    align-items: end;
+}
+
+
+.integrante-linha .campo {
+
+    margin-top:
+        10px;
+}
+
+
+.botao-novo-integrante {
+
+    border: 0;
+
+    padding: 6px 0;
+
+    cursor: pointer;
+
+    background:
+        transparent;
+
+    color:
+        var(--smurf-1);
+
+    font-weight: 800;
+}
+
+
+.remover-integrante {
+
+    width: 42px;
+    height: 50px;
+
+    border:
+        1px solid #E7C5C5;
+
+    border-radius:
+        11px;
+
+    cursor: pointer;
+
+    background:
+        var(--vermelho-claro);
+
+    color:
+        var(--vermelho);
+
+    font-size: 18px;
+    font-weight: 900;
+}
+
+
+.remover-integrante:disabled {
+
+    visibility:
+        hidden;
 }
 
 
@@ -1618,7 +1749,7 @@ input {
 
     .resumo-info small {
 
-        font-size: 9px;
+        font-size: 12px;
 
     }
 
@@ -1695,7 +1826,7 @@ input {
     }
 
 
-    .cpf,
+    .detalhes,
     .status-info {
 
         font-size: 10px;
@@ -1949,7 +2080,7 @@ input {
     .resumo-info small {
         margin-bottom: 5px;
 
-        font-size: 9px;
+        font-size: 13px;
 
         letter-spacing: .2px;
     }
@@ -2082,7 +2213,7 @@ input {
     }
 
 
-    .cpf {
+    .detalhes {
         margin-top: 4px;
 
         font-size: 12px;
@@ -2277,6 +2408,30 @@ input {
         border-radius: 12px;
 
         font-size: 16px;
+    }
+
+
+    .campo select {
+        height: 54px;
+
+        border-radius: 12px;
+
+        font-size: 16px;
+    }
+
+
+    .integrante-linha {
+        grid-template-columns:
+            minmax(0, 1fr)
+            115px
+            42px;
+
+        gap: 7px;
+    }
+
+
+    .remover-integrante {
+        height: 54px;
     }
 
 
@@ -2551,7 +2706,7 @@ and (
             <input
                 id="busca"
                 type="search"
-                placeholder="Pesquisar convidado por nome ou CPF..."
+                placeholder="Pesquisar por nome, família, adulto, criança ou ID..."
                 autocomplete="off"
                 autofocus
             >
@@ -2638,7 +2793,7 @@ and (
                 +
             </span>
 
-            Adicionar novo convidado
+            Adicionar família e integrantes
 
         </button>
 
@@ -2686,7 +2841,7 @@ and (
     class="modal-fundo"
 >
 
-    <div class="modal">
+    <div class="modal modal-familia">
 
 
         <div class="modal-icone azul">
@@ -2695,14 +2850,13 @@ and (
 
 
         <h2>
-            Adicionar convidado
+            Adicionar família
         </h2>
 
 
         <p class="modal-descricao">
-            Digite o nome completo e o CPF. Depois de salvar,
-            a pessoa aparecerá automaticamente na lista de
-            quem ainda não entrou.
+            Informe a família, o responsável e adicione todos os
+            integrantes. Use uma linha para cada adulto ou criança.
         </p>
 
 
@@ -2711,14 +2865,14 @@ and (
 
             <div class="campo">
 
-                <label for="novoNome">
-                    Nome completo
+                <label for="novaFamilia">
+                    Nome da família
                 </label>
 
                 <input
-                    id="novoNome"
+                    id="novaFamilia"
                     type="text"
-                    placeholder="Ex: João da Silva"
+                    placeholder="Ex: Silva — família da Maria"
                     autocomplete="off"
                     required
                 >
@@ -2728,21 +2882,39 @@ and (
 
             <div class="campo">
 
-                <label for="novoCpf">
-                    CPF
+                <label for="novoResponsavel">
+                    Nome completo do responsável
                 </label>
 
                 <input
-                    id="novoCpf"
+                    id="novoResponsavel"
                     type="text"
-                    placeholder="000.000.000-00"
-                    maxlength="14"
-                    inputmode="numeric"
+                    placeholder="Ex: Maria Aparecida da Silva"
                     autocomplete="off"
                     required
                 >
 
             </div>
+
+
+            <div class="integrantes-cabecalho">
+
+                <strong>
+                    Integrantes
+                </strong>
+
+                <button
+                    type="button"
+                    id="adicionarIntegrante"
+                    class="botao-novo-integrante"
+                >
+                    + Adicionar outra linha
+                </button>
+
+            </div>
+
+
+            <div id="linhasIntegrantes"></div>
 
 
             <div class="modal-botoes">
@@ -2761,7 +2933,7 @@ and (
                     id="salvarCadastro"
                     class="botao botao-entrada"
                 >
-                    Salvar convidado
+                    Salvar família
                 </button>
 
             </div>
@@ -2806,7 +2978,7 @@ and (
 
             <strong id="modalNome"></strong>
 
-            <span id="modalCpf"></span>
+            <span id="modalDetalhes"></span>
 
         </div>
 
@@ -2901,11 +3073,17 @@ const modalCadastro =
 const formCadastro =
     document.getElementById("formCadastro");
 
-const novoNome =
-    document.getElementById("novoNome");
+const novaFamilia =
+    document.getElementById("novaFamilia");
 
-const novoCpf =
-    document.getElementById("novoCpf");
+const novoResponsavel =
+    document.getElementById("novoResponsavel");
+
+const linhasIntegrantes =
+    document.getElementById("linhasIntegrantes");
+
+const adicionarIntegrante =
+    document.getElementById("adicionarIntegrante");
 
 const cancelarCadastro =
     document.getElementById("cancelarCadastro");
@@ -2922,8 +3100,8 @@ const modalDesfazer =
 const modalNome =
     document.getElementById("modalNome");
 
-const modalCpf =
-    document.getElementById("modalCpf");
+const modalDetalhes =
+    document.getElementById("modalDetalhes");
 
 const cancelarDesfazer =
     document.getElementById("cancelarDesfazer");
@@ -2940,7 +3118,8 @@ const confirmarDesfazer =
 // joao
 // JOAO
 //
-// tudo encontra a mesma pessoa.
+// Tudo encontra a mesma pessoa e pequenas diferenças
+// de escrita também são aceitas na pesquisa.
 // =====================================================
 
 function normalizarTexto(valor) {
@@ -2956,6 +3135,11 @@ function normalizarTexto(valor) {
 
         .toLowerCase()
 
+        .replace(
+            /[^a-z0-9\s-]/g,
+            " "
+        )
+
         .trim()
 
         .replace(
@@ -2966,40 +3150,225 @@ function normalizarTexto(valor) {
 }
 
 
-function somenteNumeros(valor) {
+function normalizarFonetico(valor) {
 
-    return String(valor || "")
-        .replace(/\D/g, "");
+    return normalizarTexto(valor)
+
+        .replace(/ph/g, "f")
+
+        .replace(/th/g, "t")
+
+        .replace(/y/g, "i")
+
+        .replace(/qu/g, "c")
+
+        .replace(/k/g, "c")
+
+        .replace(/w/g, "v")
+
+        .replace(/ss/g, "s")
+
+        .replace(/(.)\1+/g, "$1");
 
 }
 
 
-// =====================================================
-// CPF
-// =====================================================
+function distanciaLevenshtein(a, b) {
 
-function formatarCPF(valor) {
+    if (a === b) {
 
-    const cpf =
-        somenteNumeros(valor);
-
-
-    if (cpf.length !== 11) {
-
-        return valor;
+        return 0;
 
     }
 
 
+    const anterior =
+        Array.from(
+            {
+                length:
+                    b.length + 1
+            },
+            (_, indice) => indice
+        );
+
+
+    for (
+        let i = 1;
+        i <= a.length;
+        i++
+    ) {
+
+        const atual = [i];
+
+
+        for (
+            let j = 1;
+            j <= b.length;
+            j++
+        ) {
+
+            const custo =
+                a[i - 1] === b[j - 1]
+                    ? 0
+                    : 1;
+
+
+            atual[j] =
+                Math.min(
+                    atual[j - 1] + 1,
+                    anterior[j] + 1,
+                    anterior[j - 1] + custo
+                );
+
+        }
+
+
+        for (
+            let j = 0;
+            j < atual.length;
+            j++
+        ) {
+
+            anterior[j] =
+                atual[j];
+
+        }
+
+    }
+
+
+    return anterior[b.length];
+
+}
+
+
+function palavraCombina(
+    procurada,
+    candidata
+) {
+
+    if (
+        candidata.includes(
+            procurada
+        )
+    ) {
+
+        return true;
+
+    }
+
+
+    const a =
+        normalizarFonetico(
+            procurada
+        );
+
+    const b =
+        normalizarFonetico(
+            candidata
+        );
+
+
+    if (!a || !b) {
+
+        return false;
+
+    }
+
+
+    const maior =
+        Math.max(
+            a.length,
+            b.length
+        );
+
+
+    const limite =
+        maior >= 8
+            ? 2
+            : 1;
+
+
     return (
-        cpf.slice(0,3) +
-        "." +
-        cpf.slice(3,6) +
-        "." +
-        cpf.slice(6,9) +
-        "-" +
-        cpf.slice(9)
+        maior >= 4 &&
+        distanciaLevenshtein(
+            a,
+            b
+        ) <= limite
     );
+
+}
+
+
+function correspondeBusca(
+    pessoa,
+    digitado
+) {
+
+    const termo =
+        normalizarTexto(
+            digitado
+        );
+
+
+    if (!termo) {
+
+        return true;
+
+    }
+
+
+    const tipo =
+        pessoa.tipo === "crianca"
+            ? "crianca criancas"
+            : "adulto adultos";
+
+
+    const campos = [
+        pessoa.nome,
+        pessoa.familia,
+        pessoa.responsavel,
+        pessoa.codigo,
+        pessoa.familiaCodigo,
+        tipo
+    ]
+        .map(normalizarTexto)
+        .filter(Boolean);
+
+
+    const textoCompleto =
+        campos.join(" ");
+
+
+    if (
+        textoCompleto.includes(
+            termo
+        )
+    ) {
+
+        return true;
+
+    }
+
+
+    const candidatas =
+        textoCompleto.split(
+            /[\s-]+/
+        );
+
+
+    return termo
+        .split(/[\s-]+/)
+        .every(
+            procurada =>
+                candidatas.some(
+                    candidata =>
+                        palavraCombina(
+                            procurada,
+                            candidata
+                        )
+                )
+        );
 
 }
 
@@ -3196,18 +3565,6 @@ function obterPessoas() {
         busca.value;
 
 
-    const termoNome =
-        normalizarTexto(
-            digitado
-        );
-
-
-    const termoCPF =
-        somenteNumeros(
-            digitado
-        );
-
-
     return visitantes
 
         .filter(
@@ -3246,45 +3603,9 @@ function obterPessoas() {
                 }
 
 
-                // SEM PESQUISA
-
-                if (
-                    !termoNome &&
-                    !termoCPF
-                ) {
-
-                    return true;
-
-                }
-
-
-                const nome =
-                    normalizarTexto(
-                        pessoa.nome
-                    );
-
-
-                const cpf =
-                    somenteNumeros(
-                        pessoa.cpf
-                    );
-
-
-                return (
-
-                    nome.includes(
-                        termoNome
-                    )
-
-                    ||
-
-                    (
-                        termoCPF &&
-                        cpf.includes(
-                            termoCPF
-                        )
-                    )
-
+                return correspondeBusca(
+                    pessoa,
+                    digitado
                 );
 
             }
@@ -3379,7 +3700,7 @@ function renderizarLista() {
                 </strong>
 
                 <span>
-                    Confira o nome ou CPF pesquisado.
+                    Confira o nome, a família, o tipo ou o ID pesquisado.
                 </span>
 
             </div>
@@ -3427,7 +3748,7 @@ function renderizarLista() {
 
 
             // ===========================
-            // NOME E CPF
+            // NOME, FAMÍLIA, TIPO E IDS
             // ===========================
 
             const dados =
@@ -3450,20 +3771,36 @@ function renderizarLista() {
                 pessoa.nome;
 
 
-            const cpf =
+            const detalhes =
                 document.createElement(
                     "div"
                 );
 
 
-            cpf.className =
-                "cpf";
+            detalhes.className =
+                "detalhes";
 
 
-            cpf.textContent =
-                formatarCPF(
-                    pessoa.cpf
+            detalhes.textContent =
+                `${
+                    pessoa.tipo === "crianca"
+                        ? "Criança"
+                        : "Adulto"
+                } • Família: ${pessoa.familia} • ID: ${pessoa.codigo}`;
+
+
+            const vinculo =
+                document.createElement(
+                    "div"
                 );
+
+
+            vinculo.className =
+                "detalhes";
+
+
+            vinculo.textContent =
+                `Responsável: ${pessoa.responsavel} • Família ID: ${pessoa.familiaCodigo}`;
 
 
             dados.appendChild(
@@ -3472,7 +3809,12 @@ function renderizarLista() {
 
 
             dados.appendChild(
-                cpf
+                detalhes
+            );
+
+
+            dados.appendChild(
+                vinculo
             );
 
 
@@ -3836,6 +4178,265 @@ async function marcarEntrada(
 // CADASTRO
 // =====================================================
 
+let numeroLinhaIntegrante = 0;
+
+
+function atualizarBotoesRemover() {
+
+    const linhas =
+        linhasIntegrantes.querySelectorAll(
+            ".integrante-linha"
+        );
+
+
+    linhas.forEach(
+        linha => {
+
+            const botao =
+                linha.querySelector(
+                    ".remover-integrante"
+                );
+
+
+            botao.disabled =
+                linhas.length === 1;
+
+        }
+    );
+
+}
+
+
+function criarLinhaIntegrante(
+    valores = {}
+) {
+
+    numeroLinhaIntegrante += 1;
+
+
+    const linha =
+        document.createElement(
+            "div"
+        );
+
+
+    linha.className =
+        "integrante-linha";
+
+
+    const campoNome =
+        document.createElement(
+            "div"
+        );
+
+
+    campoNome.className =
+        "campo";
+
+
+    const idNome =
+        `integranteNome${numeroLinhaIntegrante}`;
+
+
+    const labelNome =
+        document.createElement(
+            "label"
+        );
+
+
+    labelNome.htmlFor =
+        idNome;
+
+
+    labelNome.textContent =
+        "Nome completo";
+
+
+    const inputNome =
+        document.createElement(
+            "input"
+        );
+
+
+    inputNome.id =
+        idNome;
+
+
+    inputNome.className =
+        "integrante-nome";
+
+
+    inputNome.type =
+        "text";
+
+
+    inputNome.placeholder =
+        "Nome do integrante";
+
+
+    inputNome.autocomplete =
+        "off";
+
+
+    inputNome.required =
+        true;
+
+
+    inputNome.value =
+        valores.nome || "";
+
+
+    campoNome.append(
+        labelNome,
+        inputNome
+    );
+
+
+    const campoTipo =
+        document.createElement(
+            "div"
+        );
+
+
+    campoTipo.className =
+        "campo";
+
+
+    const idTipo =
+        `integranteTipo${numeroLinhaIntegrante}`;
+
+
+    const labelTipo =
+        document.createElement(
+            "label"
+        );
+
+
+    labelTipo.htmlFor =
+        idTipo;
+
+
+    labelTipo.textContent =
+        "Tipo";
+
+
+    const selectTipo =
+        document.createElement(
+            "select"
+        );
+
+
+    selectTipo.id =
+        idTipo;
+
+
+    selectTipo.className =
+        "integrante-tipo";
+
+
+    const opcaoAdulto =
+        new Option(
+            "Adulto",
+            "adulto"
+        );
+
+
+    const opcaoCrianca =
+        new Option(
+            "Criança",
+            "crianca"
+        );
+
+
+    selectTipo.append(
+        opcaoAdulto,
+        opcaoCrianca
+    );
+
+
+    selectTipo.value =
+        valores.tipo === "crianca"
+            ? "crianca"
+            : "adulto";
+
+
+    campoTipo.append(
+        labelTipo,
+        selectTipo
+    );
+
+
+    const remover =
+        document.createElement(
+            "button"
+        );
+
+
+    remover.type =
+        "button";
+
+
+    remover.className =
+        "remover-integrante";
+
+
+    remover.setAttribute(
+        "aria-label",
+        "Remover integrante"
+    );
+
+
+    remover.title =
+        "Remover integrante";
+
+
+    remover.textContent =
+        "×";
+
+
+    remover.addEventListener(
+        "click",
+        () => {
+
+            linha.remove();
+
+            atualizarBotoesRemover();
+
+        }
+    );
+
+
+    linha.append(
+        campoNome,
+        campoTipo,
+        remover
+    );
+
+
+    linhasIntegrantes.appendChild(
+        linha
+    );
+
+
+    atualizarBotoesRemover();
+
+
+    return inputNome;
+
+}
+
+
+function reiniciarLinhasIntegrantes() {
+
+    linhasIntegrantes.innerHTML =
+        "";
+
+
+    criarLinhaIntegrante();
+
+}
+
+
 abrirCadastro.addEventListener(
     "click",
     () => {
@@ -3847,7 +4448,7 @@ abrirCadastro.addEventListener(
 
         setTimeout(
             () =>
-                novoNome.focus(),
+                novaFamilia.focus(),
             40
         );
 
@@ -3863,6 +4464,9 @@ function fecharCadastro() {
 
 
     formCadastro.reset();
+
+
+    reiniciarLinhasIntegrantes();
 
 }
 
@@ -3891,71 +4495,117 @@ modalCadastro.addEventListener(
 
 
 // =====================================================
-// FORMATA CPF ENQUANTO DIGITA
+// ADICIONAR QUANTAS LINHAS FOREM NECESSÁRIAS
 // =====================================================
 
-novoCpf.addEventListener(
-    "input",
+adicionarIntegrante.addEventListener(
+    "click",
     () => {
 
-
-        let cpf =
-            somenteNumeros(
-                novoCpf.value
-            )
-            .slice(
-                0,
-                11
-            );
+        const input =
+            criarLinhaIntegrante();
 
 
-        if (
-            cpf.length > 9
-        ) {
-
-            cpf =
-                cpf.replace(
-                    /(\d{3})(\d{3})(\d{3})(\d{1,2})/,
-                    "$1.$2.$3-$4"
-                );
-
-        }
-
-        else if (
-            cpf.length > 6
-        ) {
-
-            cpf =
-                cpf.replace(
-                    /(\d{3})(\d{3})(\d+)/,
-                    "$1.$2.$3"
-                );
-
-        }
-
-        else if (
-            cpf.length > 3
-        ) {
-
-            cpf =
-                cpf.replace(
-                    /(\d{3})(\d+)/,
-                    "$1.$2"
-                );
-
-        }
-
-
-        novoCpf.value =
-            cpf;
+        input.focus();
 
     }
 );
 
 
 // =====================================================
-// SALVAR NOVO CONVIDADO
+// SALVAR NOVA FAMÍLIA
 // =====================================================
+
+function coletarIntegrantes() {
+
+    return Array.from(
+        linhasIntegrantes.querySelectorAll(
+            ".integrante-linha"
+        )
+    )
+        .map(
+            linha => ({
+
+                nome:
+                    linha.querySelector(
+                        ".integrante-nome"
+                    ).value.trim(),
+
+                tipo:
+                    linha.querySelector(
+                        ".integrante-tipo"
+                    ).value
+
+            })
+        );
+
+}
+
+
+async function enviarFamilia(
+    cadastro,
+    confirmarDuplicados = false
+) {
+
+    return fetch(
+        "/api/familias",
+        {
+
+            method:
+                "POST",
+
+            headers: {
+
+                "Content-Type":
+                    "application/json"
+
+            },
+
+            body:
+                JSON.stringify({
+                    ...cadastro,
+                    confirmarDuplicados
+                })
+
+        }
+    );
+
+}
+
+
+function confirmarNomesParecidos(
+    duplicados
+) {
+
+    const exemplos =
+        duplicados
+            .slice(0, 8)
+            .map(
+                item =>
+                    `• ${item.novoNome} parece com ${item.nomeEncontrado} ` +
+                    `(${item.familiaEncontrada}${
+                        item.codigoEncontrado
+                            ? `, ${item.codigoEncontrado}`
+                            : ""
+                    })`
+            )
+            .join("\n");
+
+
+    const restantes =
+        duplicados.length > 8
+            ? `\n...e mais ${duplicados.length - 8}.`
+            : "";
+
+
+    return window.confirm(
+        "Encontramos nomes iguais ou escritos de forma parecida:\n\n" +
+        exemplos +
+        restantes +
+        "\n\nOs IDs serão diferentes. Deseja cadastrar mesmo assim?"
+    );
+
+}
 
 formCadastro.addEventListener(
     "submit",
@@ -3965,20 +4615,34 @@ formCadastro.addEventListener(
         evento.preventDefault();
 
 
-        const nome =
-            novoNome.value.trim();
+        const familia =
+            novaFamilia.value.trim();
 
 
-        const cpf =
-            somenteNumeros(
-                novoCpf.value
-            );
+        const responsavel =
+            novoResponsavel.value.trim();
 
 
-        if (!nome) {
+        const integrantes =
+            coletarIntegrantes();
+
+
+        if (!familia) {
 
             toast(
-                "Digite o nome do convidado.",
+                "Digite o nome da família.",
+                "erro"
+            );
+
+            return;
+
+        }
+
+
+        if (!responsavel) {
+
+            toast(
+                "Digite o nome completo do responsável.",
                 "erro"
             );
 
@@ -3988,11 +4652,15 @@ formCadastro.addEventListener(
 
 
         if (
-            cpf.length !== 11
+            integrantes.length === 0 ||
+            integrantes.some(
+                integrante =>
+                    !integrante.nome
+            )
         ) {
 
             toast(
-                "O CPF precisa ter 11 números.",
+                "Preencha o nome de todos os integrantes.",
                 "erro"
             );
 
@@ -4011,33 +4679,57 @@ formCadastro.addEventListener(
 
         try {
 
-            const resposta =
-                await fetch(
-                    "/api/visitantes",
-                    {
+            const cadastro = {
+                familia,
+                responsavel,
+                integrantes
+            };
 
-                        method:
-                            "POST",
 
-                        headers: {
-
-                            "Content-Type":
-                                "application/json"
-
-                        },
-
-                        body:
-                            JSON.stringify({
-                                nome,
-                                cpf
-                            })
-
-                    }
+            let resposta =
+                await enviarFamilia(
+                    cadastro
                 );
 
 
-            const dados =
+            let dados =
                 await resposta.json();
+
+
+            if (
+                resposta.status === 409 &&
+                dados.precisaConfirmacao &&
+                Array.isArray(
+                    dados.duplicados
+                )
+            ) {
+
+                if (
+                    !confirmarNomesParecidos(
+                        dados.duplicados
+                    )
+                ) {
+
+                    toast(
+                        "Cadastro não realizado. Revise os nomes."
+                    );
+
+                    return;
+
+                }
+
+
+                resposta =
+                    await enviarFamilia(
+                        cadastro,
+                        true
+                    );
+
+
+                dados =
+                    await resposta.json();
+
+            }
 
 
             if (!resposta.ok) {
@@ -4051,7 +4743,7 @@ formCadastro.addEventListener(
 
 
             visitantes.push(
-                dados
+                ...dados.visitantes
             );
 
 
@@ -4069,7 +4761,7 @@ formCadastro.addEventListener(
 
 
             toast(
-                `${dados.nome} foi adicionado.`,
+                `${dados.visitantes.length} integrante(s) da família ${dados.familia} adicionado(s).`,
                 "sucesso"
             );
 
@@ -4091,12 +4783,15 @@ formCadastro.addEventListener(
 
 
             salvarCadastro.textContent =
-                "Salvar convidado";
+                "Salvar família";
 
         }
 
     }
 );
+
+
+reiniciarLinhasIntegrantes();
 
 
 // =====================================================
@@ -4115,10 +4810,12 @@ function abrirDesfazer(
         pessoa.nome;
 
 
-    modalCpf.textContent =
-        formatarCPF(
-            pessoa.cpf
-        );
+    modalDetalhes.textContent =
+        `${
+            pessoa.tipo === "crianca"
+                ? "Criança"
+                : "Adulto"
+        } • Família: ${pessoa.familia} • Responsável: ${pessoa.responsavel} • ID: ${pessoa.codigo}`;
 
 
     modalDesfazer.classList.add(
