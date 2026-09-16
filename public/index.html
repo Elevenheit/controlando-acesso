@@ -2599,6 +2599,337 @@ and (
 
 }
 
+
+/* =====================================================
+   LISTA POR FAMÍLIAS — VISUAL AGRUPADO
+===================================================== */
+
+.lista-scroll {
+    padding: 12px;
+    background: #F7FBFD;
+}
+
+.familia-card {
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+    background: #FFFFFF;
+    box-shadow: 0 6px 20px rgba(16, 89, 130, .07);
+}
+
+.familia-card:last-child {
+    margin-bottom: 0;
+}
+
+.familia-cabecalho {
+    width: 100%;
+    min-height: 78px;
+    border: 0;
+    padding: 13px 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    text-align: left;
+    cursor: pointer;
+    background: linear-gradient(135deg, #FFFFFF, #F2FAFE);
+    color: var(--texto);
+    transition: background .15s, transform .08s;
+}
+
+.familia-cabecalho:hover {
+    background: linear-gradient(135deg, #F9FDFF, #EAF7FD);
+}
+
+.familia-cabecalho:active {
+    transform: scale(.998);
+}
+
+.familia-cabecalho-esquerda {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.familia-icone {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--smurf-claro);
+    font-size: 21px;
+}
+
+.familia-titulo-area {
+    min-width: 0;
+}
+
+.familia-titulo {
+    margin: 0;
+    overflow: hidden;
+    color: #0B648F;
+    font-size: clamp(14px, 1.15vw, 18px);
+    font-weight: 900;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.familia-responsavel {
+    margin-top: 4px;
+    overflow: hidden;
+    color: var(--texto-secundario);
+    font-size: 11px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.familia-resumo {
+    margin-top: 7px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.familia-chip {
+    padding: 4px 8px;
+    border: 1px solid #D9EAF3;
+    border-radius: 999px;
+    background: #F7FCFF;
+    color: #557786;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.familia-chip.criancas {
+    background: #FFF7DF;
+    border-color: #F4DF9C;
+    color: #8A6609;
+}
+
+.familia-chip.presentes {
+    background: var(--verde-claro);
+    border-color: #BFE7D5;
+    color: var(--verde-escuro);
+}
+
+.familia-chip.faltantes {
+    background: #EEF8FD;
+    border-color: #CCE7F4;
+    color: #147BAE;
+}
+
+.familia-cabecalho-direita {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.familia-quantidade {
+    min-width: 92px;
+    text-align: right;
+}
+
+.familia-quantidade strong {
+    display: block;
+    color: var(--texto);
+    font-size: 13px;
+}
+
+.familia-quantidade span {
+    display: block;
+    margin-top: 2px;
+    color: var(--texto-secundario);
+    font-size: 10px;
+}
+
+.familia-seta {
+    width: 31px;
+    height: 31px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #EAF7FD;
+    color: #1689C7;
+    font-size: 17px;
+    font-weight: 900;
+    transition: transform .18s, background .15s;
+}
+
+.familia-card.aberta .familia-seta {
+    transform: rotate(180deg);
+    background: #DDF2FC;
+}
+
+.familia-membros {
+    display: none;
+    border-top: 1px solid #E3EEF4;
+    background: #FFFFFF;
+}
+
+.familia-card.aberta .familia-membros {
+    display: block;
+}
+
+.membro-linha {
+    display: grid;
+    grid-template-columns: minmax(210px, 1fr) minmax(135px, 180px) 150px;
+    gap: 13px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #EDF2F5;
+}
+
+.membro-linha:last-child {
+    border-bottom: 0;
+}
+
+.membro-linha:hover {
+    background: #F9FCFE;
+}
+
+.membro-linha.entrou {
+    background: #F1FBF6;
+}
+
+.membro-identidade {
+    min-width: 0;
+}
+
+.membro-topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+
+.membro-nome {
+    color: var(--texto);
+    font-size: 13px;
+    font-weight: 850;
+    word-break: break-word;
+}
+
+.tipo-pill,
+.responsavel-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .25px;
+}
+
+.tipo-pill.adulto {
+    background: #EDF7FC;
+    color: #31799B;
+}
+
+.tipo-pill.crianca {
+    background: #FFF6D9;
+    color: #89690D;
+}
+
+.responsavel-pill {
+    background: #EEEAFD;
+    color: #684DB2;
+}
+
+.membro-subtexto {
+    margin-top: 4px;
+    color: var(--texto-secundario);
+    font-size: 10px;
+}
+
+.membro-linha .status-info {
+    font-size: 11px;
+}
+
+.membro-linha .botao {
+    min-height: 38px;
+    border-radius: 10px;
+}
+
+@media(max-width: 850px) {
+    .lista-scroll {
+        padding: 8px;
+    }
+
+    .familia-cabecalho {
+        min-height: 70px;
+        padding: 11px 12px;
+    }
+
+    .familia-icone {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        font-size: 18px;
+    }
+
+    .familia-quantidade {
+        display: none;
+    }
+
+    .membro-linha {
+        grid-template-columns: minmax(145px, 1fr) 110px 118px;
+        gap: 7px;
+        padding: 9px 10px;
+    }
+
+    .membro-nome {
+        font-size: 12px;
+    }
+
+    .tipo-pill,
+    .responsavel-pill {
+        font-size: 8px;
+        padding: 2px 6px;
+    }
+}
+
+@media(max-width: 620px) {
+    .familia-cabecalho {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .familia-cabecalho-esquerda {
+        gap: 9px;
+    }
+
+    .familia-resumo {
+        gap: 4px;
+    }
+
+    .familia-chip {
+        padding: 3px 6px;
+        font-size: 9px;
+    }
+
+    .membro-linha {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 11px 12px;
+    }
+
+    .membro-linha .status-info {
+        padding-top: 7px;
+        border-top: 1px dashed #E3EDF2;
+    }
+
+    .membro-linha .botao {
+        width: 100%;
+    }
+}
+
 </style>
 
 </head>
@@ -3028,6 +3359,9 @@ let abaAtual =
 
 let pessoaParaDesfazer =
     null;
+
+// Famílias que o operador deixou abertas na listagem.
+const familiasAbertas = new Set();
 
 
 // =====================================================
@@ -3678,10 +4012,8 @@ function renderizarLista() {
     const pessoas =
         obterPessoas();
 
-
     lista.innerHTML =
         "";
-
 
     if (
         pessoas.length === 0
@@ -3700,274 +4032,785 @@ function renderizarLista() {
                 </strong>
 
                 <span>
-                    Confira o nome, a família, o tipo ou o ID pesquisado.
+                    Confira o nome da pessoa ou o nome da família pesquisada.
                 </span>
 
             </div>
-
         `;
-
 
         resultadoTexto.textContent =
             "Nenhum resultado";
 
-
         return;
-
     }
+
+
+    // Agrupa pelo código interno da família sem exibi-lo na tela.
+    // Se algum cadastro antigo não tiver código, usa o nome da família.
+    const gruposMap =
+        new Map();
+
+    pessoas.forEach(
+        pessoa => {
+
+            const chave =
+                String(
+                    pessoa.familiaCodigo ||
+                    pessoa.familia ||
+                    pessoa.responsavel ||
+                    pessoa.nome
+                );
+
+            if (
+                !gruposMap.has(chave)
+            ) {
+
+                gruposMap.set(
+                    chave,
+                    {
+                        chave,
+                        familia:
+                            pessoa.familia ||
+                            `Família de ${pessoa.responsavel || pessoa.nome}`,
+                        responsavel:
+                            pessoa.responsavel ||
+                            pessoa.nome,
+                        pessoas: []
+                    }
+                );
+
+            }
+
+            gruposMap.get(chave)
+                .pessoas
+                .push(pessoa);
+
+        }
+    );
+
+
+    const grupos =
+        [...gruposMap.values()];
+
+
+    // Na aba "Já entraram", mantém as famílias com entradas mais recentes em cima.
+    // Na aba "Faltam entrar", usa ordem alfabética por família.
+    grupos.sort(
+        (a, b) => {
+
+            if (
+                abaAtual ===
+                "entrou"
+            ) {
+
+                const ultimaA =
+                    Math.max(
+                        ...a.pessoas.map(
+                            pessoa =>
+                                new Date(
+                                    pessoa.entradaEm || 0
+                                ).getTime()
+                        )
+                    );
+
+                const ultimaB =
+                    Math.max(
+                        ...b.pessoas.map(
+                            pessoa =>
+                                new Date(
+                                    pessoa.entradaEm || 0
+                                ).getTime()
+                        )
+                    );
+
+                return ultimaB - ultimaA;
+
+            }
+
+            return String(a.familia)
+                .localeCompare(
+                    String(b.familia),
+                    "pt-BR"
+                );
+
+        }
+    );
+
+
+    const pesquisando =
+        Boolean(
+            busca.value.trim()
+        );
 
 
     const fragmento =
         document.createDocumentFragment();
 
 
-    pessoas.forEach(
-        pessoa => {
+    grupos.forEach(
+        grupo => {
 
-
-            const linha =
-                document.createElement(
-                    "div"
+            const todosDaFamilia =
+                visitantes.filter(
+                    pessoa =>
+                        String(
+                            pessoa.familiaCodigo ||
+                            pessoa.familia ||
+                            pessoa.responsavel ||
+                            pessoa.nome
+                        ) === grupo.chave
                 );
 
+            const adultos =
+                todosDaFamilia.filter(
+                    pessoa =>
+                        pessoa.tipo !==
+                        "crianca"
+                ).length;
 
-            linha.className =
-                "pessoa";
+            const criancas =
+                todosDaFamilia.filter(
+                    pessoa =>
+                        pessoa.tipo ===
+                        "crianca"
+                ).length;
+
+            const presentes =
+                todosDaFamilia.filter(
+                    pessoa =>
+                        pessoa.status ===
+                        "entrou"
+                ).length;
+
+            const faltantes =
+                todosDaFamilia.length -
+                presentes;
 
 
-            if (
-                pessoa.status ===
-                "entrou"
-            ) {
+            const card =
+                document.createElement(
+                    "section"
+                );
 
-                linha.classList.add(
-                    "entrou"
+            card.className =
+                "familia-card";
+
+
+            // Durante uma pesquisa, abre automaticamente a família encontrada.
+            const aberta =
+                pesquisando ||
+                familiasAbertas.has(
+                    grupo.chave
+                );
+
+            if (aberta) {
+
+                card.classList.add(
+                    "aberta"
                 );
 
             }
 
 
-            // ===========================
-            // NOME, FAMÍLIA, TIPO E IDS
-            // ===========================
-
-            const dados =
-                document.createElement(
-                    "div"
-                );
-
-
-            const nome =
-                document.createElement(
-                    "div"
-                );
-
-
-            nome.className =
-                "nome";
-
-
-            nome.textContent =
-                pessoa.nome;
-
-
-            const detalhes =
-                document.createElement(
-                    "div"
-                );
-
-
-            detalhes.className =
-                "detalhes";
-
-
-            detalhes.textContent =
-                `${
-                    pessoa.tipo === "crianca"
-                        ? "Criança"
-                        : "Adulto"
-                } • Família: ${pessoa.familia} • ID: ${pessoa.codigo}`;
-
-
-            const vinculo =
-                document.createElement(
-                    "div"
-                );
-
-
-            vinculo.className =
-                "detalhes";
-
-
-            vinculo.textContent =
-                `Responsável: ${pessoa.responsavel} • Família ID: ${pessoa.familiaCodigo}`;
-
-
-            dados.appendChild(
-                nome
-            );
-
-
-            dados.appendChild(
-                detalhes
-            );
-
-
-            dados.appendChild(
-                vinculo
-            );
-
-
-            linha.appendChild(
-                dados
-            );
-
-
-            // ===========================
-            // STATUS
-            // ===========================
-
-            const status =
-                document.createElement(
-                    "div"
-                );
-
-
-            status.className =
-                "status-info";
-
-
-            if (
-                pessoa.status ===
-                "entrou"
-            ) {
-
-                const titulo =
-                    document.createElement(
-                        "strong"
-                    );
-
-
-                titulo.textContent =
-                    "Entrada registrada";
-
-
-                status.appendChild(
-                    titulo
-                );
-
-
-                status.appendChild(
-                    document.createTextNode(
-                        formatarHorario(
-                            pessoa.entradaEm
-                        )
-                    )
-                );
-
-            }
-
-            else {
-
-                const titulo =
-                    document.createElement(
-                        "strong"
-                    );
-
-
-                titulo.textContent =
-                    "Aguardando entrada";
-
-
-                status.appendChild(
-                    titulo
-                );
-
-
-                status.appendChild(
-                    document.createTextNode(
-                        "Ainda não entrou"
-                    )
-                );
-
-            }
-
-
-            linha.appendChild(
-                status
-            );
-
-
-            // ===========================
-            // BOTÃO
-            // ===========================
-
-            const botao =
+            const cabecalho =
                 document.createElement(
                     "button"
                 );
 
+            cabecalho.type =
+                "button";
 
-            botao.className =
-                "botao";
+            cabecalho.className =
+                "familia-cabecalho";
 
-
-            if (
-                pessoa.status ===
-                "entrou"
-            ) {
-
-                botao.classList.add(
-                    "botao-desfazer"
-                );
-
-
-                botao.textContent =
-                    "Desfazer";
-
-
-                botao.onclick =
-                    () => {
-
-                        abrirDesfazer(
-                            pessoa
-                        );
-
-                    };
-
-            }
-
-            else {
-
-                botao.classList.add(
-                    "botao-entrada"
-                );
-
-
-                botao.textContent =
-                    "Marcar entrada";
-
-
-                botao.onclick =
-                    () => {
-
-                        marcarEntrada(
-                            pessoa,
-                            botao
-                        );
-
-                    };
-
-            }
-
-
-            linha.appendChild(
-                botao
+            cabecalho.setAttribute(
+                "aria-expanded",
+                aberta
+                    ? "true"
+                    : "false"
             );
 
 
+            const esquerda =
+                document.createElement(
+                    "div"
+                );
+
+            esquerda.className =
+                "familia-cabecalho-esquerda";
+
+
+            const icone =
+                document.createElement(
+                    "div"
+                );
+
+            icone.className =
+                "familia-icone";
+
+            icone.textContent =
+                "👨‍👩‍👧";
+
+
+            const tituloArea =
+                document.createElement(
+                    "div"
+                );
+
+            tituloArea.className =
+                "familia-titulo-area";
+
+
+            const titulo =
+                document.createElement(
+                    "div"
+                );
+
+            titulo.className =
+                "familia-titulo";
+
+            titulo.textContent =
+                grupo.familia;
+
+
+            const responsavel =
+                document.createElement(
+                    "div"
+                );
+
+            responsavel.className =
+                "familia-responsavel";
+
+            responsavel.textContent =
+                `Responsável: ${grupo.responsavel}`;
+
+
+            const resumo =
+                document.createElement(
+                    "div"
+                );
+
+            resumo.className =
+                "familia-resumo";
+
+
+            const criarChip =
+                (
+                    texto,
+                    classe = ""
+                ) => {
+
+                    const chip =
+                        document.createElement(
+                            "span"
+                        );
+
+                    chip.className =
+                        `familia-chip ${classe}`.trim();
+
+                    chip.textContent =
+                        texto;
+
+                    return chip;
+
+                };
+
+
+            resumo.appendChild(
+                criarChip(
+                    `${adultos} ${
+                        adultos === 1
+                            ? "adulto"
+                            : "adultos"
+                    }`
+                )
+            );
+
+            resumo.appendChild(
+                criarChip(
+                    `${criancas} ${
+                        criancas === 1
+                            ? "criança"
+                            : "crianças"
+                    }`,
+                    "criancas"
+                )
+            );
+
+            if (
+                presentes > 0
+            ) {
+
+                resumo.appendChild(
+                    criarChip(
+                        `${presentes} ${
+                            presentes === 1
+                                ? "presente"
+                                : "presentes"
+                        }`,
+                        "presentes"
+                    )
+                );
+
+            }
+
+            if (
+                faltantes > 0
+            ) {
+
+                resumo.appendChild(
+                    criarChip(
+                        `${faltantes} ${
+                            faltantes === 1
+                                ? "aguardando"
+                                : "aguardando"
+                        }`,
+                        "faltantes"
+                    )
+                );
+
+            }
+
+
+            tituloArea.appendChild(
+                titulo
+            );
+
+            tituloArea.appendChild(
+                responsavel
+            );
+
+            tituloArea.appendChild(
+                resumo
+            );
+
+
+            esquerda.appendChild(
+                icone
+            );
+
+            esquerda.appendChild(
+                tituloArea
+            );
+
+
+            const direita =
+                document.createElement(
+                    "div"
+                );
+
+            direita.className =
+                "familia-cabecalho-direita";
+
+
+            const quantidade =
+                document.createElement(
+                    "div"
+                );
+
+            quantidade.className =
+                "familia-quantidade";
+
+            quantidade.innerHTML =
+                `<strong>${todosDaFamilia.length} ${
+                    todosDaFamilia.length === 1
+                        ? "convidado"
+                        : "convidados"
+                }</strong><span>Clique para ${
+                    aberta
+                        ? "fechar"
+                        : "ver integrantes"
+                }</span>`;
+
+
+            const seta =
+                document.createElement(
+                    "span"
+                );
+
+            seta.className =
+                "familia-seta";
+
+            seta.textContent =
+                "⌄";
+
+
+            direita.appendChild(
+                quantidade
+            );
+
+            direita.appendChild(
+                seta
+            );
+
+
+            cabecalho.appendChild(
+                esquerda
+            );
+
+            cabecalho.appendChild(
+                direita
+            );
+
+
+            const membros =
+                document.createElement(
+                    "div"
+                );
+
+            membros.className =
+                "familia-membros";
+
+
+            grupo.pessoas
+                .sort(
+                    (a, b) => {
+
+                        // Adultos primeiro e depois crianças; dentro do tipo, ordem alfabética.
+                        if (
+                            a.tipo !==
+                            b.tipo
+                        ) {
+
+                            return a.tipo === "crianca"
+                                ? 1
+                                : -1;
+
+                        }
+
+                        return String(a.nome)
+                            .localeCompare(
+                                String(b.nome),
+                                "pt-BR"
+                            );
+
+                    }
+                )
+                .forEach(
+                    pessoa => {
+
+                        const linha =
+                            document.createElement(
+                                "div"
+                            );
+
+                        linha.className =
+                            "membro-linha";
+
+                        if (
+                            pessoa.status ===
+                            "entrou"
+                        ) {
+
+                            linha.classList.add(
+                                "entrou"
+                            );
+
+                        }
+
+
+                        const identidade =
+                            document.createElement(
+                                "div"
+                            );
+
+                        identidade.className =
+                            "membro-identidade";
+
+
+                        const topo =
+                            document.createElement(
+                                "div"
+                            );
+
+                        topo.className =
+                            "membro-topo";
+
+
+                        const nome =
+                            document.createElement(
+                                "span"
+                            );
+
+                        nome.className =
+                            "membro-nome";
+
+                        nome.textContent =
+                            pessoa.nome;
+
+
+                        const tipo =
+                            document.createElement(
+                                "span"
+                            );
+
+                        tipo.className =
+                            `tipo-pill ${
+                                pessoa.tipo === "crianca"
+                                    ? "crianca"
+                                    : "adulto"
+                            }`;
+
+                        tipo.textContent =
+                            pessoa.tipo === "crianca"
+                                ? "Criança"
+                                : "Adulto";
+
+
+                        topo.appendChild(
+                            nome
+                        );
+
+                        topo.appendChild(
+                            tipo
+                        );
+
+
+                        if (
+                            normalizarTexto(
+                                pessoa.nome
+                            ) ===
+                            normalizarTexto(
+                                grupo.responsavel
+                            )
+                        ) {
+
+                            const principal =
+                                document.createElement(
+                                    "span"
+                                );
+
+                            principal.className =
+                                "responsavel-pill";
+
+                            principal.textContent =
+                                "Responsável";
+
+                            topo.appendChild(
+                                principal
+                            );
+
+                        }
+
+
+                        const subtexto =
+                            document.createElement(
+                                "div"
+                            );
+
+                        subtexto.className =
+                            "membro-subtexto";
+
+                        subtexto.textContent =
+                            pessoa.status === "entrou"
+                                ? "Acesso confirmado"
+                                : "Aguardando entrada";
+
+
+                        identidade.appendChild(
+                            topo
+                        );
+
+                        identidade.appendChild(
+                            subtexto
+                        );
+
+
+                        const status =
+                            document.createElement(
+                                "div"
+                            );
+
+                        status.className =
+                            "status-info";
+
+
+                        const statusTitulo =
+                            document.createElement(
+                                "strong"
+                            );
+
+                        if (
+                            pessoa.status ===
+                            "entrou"
+                        ) {
+
+                            statusTitulo.textContent =
+                                "✓ Entrada registrada";
+
+                            status.appendChild(
+                                statusTitulo
+                            );
+
+                            status.appendChild(
+                                document.createTextNode(
+                                    formatarHorario(
+                                        pessoa.entradaEm
+                                    )
+                                )
+                            );
+
+                        }
+
+                        else {
+
+                            statusTitulo.textContent =
+                                "Aguardando entrada";
+
+                            status.appendChild(
+                                statusTitulo
+                            );
+
+                            status.appendChild(
+                                document.createTextNode(
+                                    "Ainda não entrou"
+                                )
+                            );
+
+                        }
+
+
+                        const botao =
+                            document.createElement(
+                                "button"
+                            );
+
+                        botao.className =
+                            "botao";
+
+
+                        if (
+                            pessoa.status ===
+                            "entrou"
+                        ) {
+
+                            botao.classList.add(
+                                "botao-desfazer"
+                            );
+
+                            botao.textContent =
+                                "Desfazer";
+
+                            botao.onclick =
+                                () => {
+
+                                    abrirDesfazer(
+                                        pessoa
+                                    );
+
+                                };
+
+                        }
+
+                        else {
+
+                            botao.classList.add(
+                                "botao-entrada"
+                            );
+
+                            botao.textContent =
+                                "Marcar entrada";
+
+                            botao.onclick =
+                                () => {
+
+                                    marcarEntrada(
+                                        pessoa,
+                                        botao
+                                    );
+
+                                };
+
+                        }
+
+
+                        linha.appendChild(
+                            identidade
+                        );
+
+                        linha.appendChild(
+                            status
+                        );
+
+                        linha.appendChild(
+                            botao
+                        );
+
+                        membros.appendChild(
+                            linha
+                        );
+
+                    }
+                );
+
+
+            cabecalho.onclick =
+                () => {
+
+                    const agoraAberta =
+                        !card.classList.contains(
+                            "aberta"
+                        );
+
+                    card.classList.toggle(
+                        "aberta",
+                        agoraAberta
+                    );
+
+                    cabecalho.setAttribute(
+                        "aria-expanded",
+                        agoraAberta
+                            ? "true"
+                            : "false"
+                    );
+
+                    if (
+                        agoraAberta
+                    ) {
+
+                        familiasAbertas.add(
+                            grupo.chave
+                        );
+
+                    }
+
+                    else {
+
+                        familiasAbertas.delete(
+                            grupo.chave
+                        );
+
+                    }
+
+                    const dica =
+                        quantidade.querySelector(
+                            "span"
+                        );
+
+                    if (dica) {
+
+                        dica.textContent =
+                            `Clique para ${
+                                agoraAberta
+                                    ? "fechar"
+                                    : "ver integrantes"
+                            }`;
+
+                    }
+
+                };
+
+
+            card.appendChild(
+                cabecalho
+            );
+
+            card.appendChild(
+                membros
+            );
+
             fragmento.appendChild(
-                linha
+                card
             );
 
         }
@@ -3980,10 +4823,14 @@ function renderizarLista() {
 
 
     resultadoTexto.textContent =
-        `${pessoas.length} ${
+        `${grupos.length} ${
+            grupos.length === 1
+                ? "família"
+                : "famílias"
+        } • ${pessoas.length} ${
             pessoas.length === 1
-                ? "pessoa exibida"
-                : "pessoas exibidas"
+                ? "pessoa"
+                : "pessoas"
         }`;
 
 }
