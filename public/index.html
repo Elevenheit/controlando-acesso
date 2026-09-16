@@ -3242,6 +3242,45 @@ body {
     }
 }
 
+
+/* =====================================================
+   AJUSTE FINO DE PROPORÇÕES — 16/09/2026
+   Mantém o visual original e melhora a leitura da lista
+===================================================== */
+@media (min-width: 851px) {
+    .resumo-card { min-height: 68px; padding: 10px 15px; border-radius: 15px; }
+    .resumo-info small { font-size: clamp(12px, .95vw, 14px); margin-bottom: 3px; }
+    .resumo-info strong { font-size: clamp(19px, 1.7vw, 25px); }
+    .resumo-icone { width: 40px; height: 40px; border-radius: 13px; font-size: 18px; }
+
+    .botao-adicionar { min-height: 52px; padding: 8px 17px; border-radius: 14px; font-size: clamp(14px, 1vw, 16px); gap: 9px; }
+    .adicionar-icone { width: 27px; height: 27px; font-size: 19px; }
+
+    .membro-linha { grid-template-columns: minmax(260px, 1fr) minmax(150px, 195px) 165px; padding: 14px 17px; gap: 15px; }
+    .membro-nome { font-size: clamp(15px, 1.12vw, 17px); line-height: 1.25; }
+    .membro-subtexto { font-size: 11px; }
+    .membro-linha .status-info { font-size: 12px; }
+    .membro-linha .status-info strong { font-size: 13px; }
+    .membro-linha .botao { min-height: 45px; padding: 9px 13px; font-size: clamp(12px, .95vw, 14px); border-radius: 11px; }
+}
+
+@media (max-width: 850px) and (min-width: 621px) {
+    .resumo-card { min-height: 52px; }
+    .botao-adicionar { min-height: 42px; }
+    .membro-linha { grid-template-columns: minmax(170px, 1fr) 120px 135px; padding: 10px 11px; }
+    .membro-nome { font-size: 14px; }
+    .membro-linha .botao { min-height: 40px; font-size: 12px; }
+}
+
+@media (max-width: 620px) {
+    .resumo-card { min-height: 68px; padding: 10px 11px; }
+    .resumo-info small { font-size: 12px; }
+    .resumo-info strong { font-size: 22px; }
+    .botao-adicionar { min-height: 50px; font-size: 14px; }
+    .membro-nome { font-size: 17px; }
+    .membro-linha { padding: 13px; }
+    .membro-linha .botao { min-height: 50px; font-size: 14px; }
+}
 </style>
 
 </head>
