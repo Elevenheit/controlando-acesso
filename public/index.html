@@ -13,6 +13,7 @@
 <title>Controle de Acesso</title>
 
 <link
+    id="faviconSite"
     rel="icon"
     type="image/svg+xml"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='31' fill='%23ffffff'/%3E%3Cpath d='M13 25C15 10 27 3 47 7c-5 3-7 8-5 14z' fill='%23d83b3b'/%3E%3Cellipse cx='31' cy='31' rx='18' ry='16' fill='%2324a2e2'/%3E%3Ccircle cx='25' cy='28' r='2.4' fill='%2317303e'/%3E%3Ccircle cx='38' cy='28' r='2.4' fill='%2317303e'/%3E%3Cpath d='M18 36c1 17 27 24 30-3-7 5-9 0-16 5-5-5-9 1-14-2z' fill='%23ffffff' stroke='%23d9e8f0' stroke-width='1.5'/%3E%3Cpath d='M25 34c4 3 9 3 13 0' fill='none' stroke='%2317303e' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"
@@ -2930,6 +2931,240 @@ and (
     }
 }
 
+
+/* =====================================================
+   MODO PAINEL FIXO — SÓ A LISTA TEM ROLAGEM
+===================================================== */
+
+html,
+body {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.topo,
+.painel-busca {
+    flex: 0 0 auto;
+}
+
+.painel-busca {
+    position: relative;
+    top: auto;
+}
+
+.container {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.resumo,
+.area-adicionar,
+.rodape {
+    flex: 0 0 auto;
+}
+
+.lista-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.lista-scroll {
+    flex: 1 1 auto;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #8FC9E7 #EDF7FC;
+}
+
+.lista-scroll::-webkit-scrollbar {
+    width: 11px;
+}
+
+.lista-scroll::-webkit-scrollbar-track {
+    background: #EDF7FC;
+    border-left: 1px solid #DDEDF5;
+}
+
+.lista-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(#8BC9E8, #65B5DC);
+    border: 2px solid #EDF7FC;
+    border-radius: 999px;
+}
+
+.lista-scroll::-webkit-scrollbar-thumb:hover {
+    background: #55A9D2;
+}
+
+
+/* =====================================================
+   AÇÕES PRINCIPAIS
+===================================================== */
+
+.area-adicionar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+}
+
+.botao-todos {
+    min-width: 245px;
+    min-height: 64px;
+    border: 0;
+    border-radius: 17px;
+    padding: 11px 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #1AA874, #14885F);
+    color: white;
+    font-size: clamp(13px, 1vw, 15px);
+    font-weight: 850;
+    box-shadow: 0 9px 25px rgba(25, 149, 104, .19);
+    transition: transform .1s, filter .15s;
+    white-space: nowrap;
+}
+
+.botao-todos:hover {
+    filter: brightness(.97);
+}
+
+.botao-todos:active {
+    transform: scale(.995);
+}
+
+.botao-todos:disabled {
+    cursor: wait;
+    opacity: .58;
+    transform: none;
+}
+
+.todos-icone {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,.17);
+    font-size: 18px;
+    font-weight: 900;
+}
+
+@media(max-width: 850px) {
+    .area-adicionar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 7px;
+    }
+
+    .botao-todos {
+        min-width: 205px;
+        min-height: 45px;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+
+    .todos-icone {
+        width: 24px;
+        height: 24px;
+        font-size: 15px;
+    }
+}
+
+@media(max-width: 620px) {
+    .area-adicionar {
+        grid-template-columns: 1fr;
+    }
+
+    .botao-todos {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Continua sem rolagem da página: a lista se adapta ao espaço restante. */
+    .topo-conteudo {
+        padding-top: 8px !important;
+        padding-bottom: 14px !important;
+    }
+}
+
+
+/* =====================================================
+   AJUSTES DE ALTURA PARA TELAS BAIXAS
+===================================================== */
+
+@media(max-height: 760px) {
+    .topo-conteudo {
+        padding-top: 8px !important;
+        padding-bottom: 14px !important;
+    }
+
+    .marca-icone {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 21px !important;
+    }
+
+    .marca p,
+    .evento-badge,
+    .frase-topo {
+        display: none !important;
+    }
+
+    .painel-busca {
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
+    }
+
+    .busca {
+        min-height: 40px !important;
+    }
+
+    .container {
+        padding-top: 7px !important;
+        padding-bottom: 7px !important;
+    }
+
+    .resumo {
+        margin-bottom: 6px !important;
+    }
+
+    .resumo-card {
+        min-height: 50px !important;
+        padding-top: 7px !important;
+        padding-bottom: 7px !important;
+    }
+
+    .area-adicionar {
+        margin-bottom: 6px !important;
+    }
+
+    .botao-adicionar,
+    .botao-todos {
+        min-height: 40px !important;
+    }
+
+    .rodape {
+        margin-top: 5px !important;
+    }
+}
+
 </style>
 
 </head>
@@ -3125,6 +3360,21 @@ and (
             </span>
 
             Adicionar família e integrantes
+
+        </button>
+
+        <button
+            id="marcarTodos"
+            class="botao-todos"
+            type="button"
+            title="Marca como presentes todos os convidados que ainda não entraram"
+        >
+
+            <span class="todos-icone">
+                ✓
+            </span>
+
+            Marcar todos como entraram
 
         </button>
 
@@ -3400,6 +3650,9 @@ const textoConexao =
 
 const abrirCadastro =
     document.getElementById("abrirCadastro");
+
+const marcarTodos =
+    document.getElementById("marcarTodos");
 
 const modalCadastro =
     document.getElementById("modalCadastro");
@@ -5021,6 +5274,158 @@ async function marcarEntrada(
 }
 
 
+
+// =====================================================
+// MARCAR TODOS COMO ENTRARAM
+// =====================================================
+
+async function marcarTodosComoEntraram() {
+
+    const faltando =
+        visitantes.filter(
+            pessoa =>
+                pessoa.status !==
+                "entrou"
+        );
+
+    if (
+        faltando.length === 0
+    ) {
+
+        toast(
+            "Todo mundo já está marcado como presente.",
+            "sucesso"
+        );
+
+        return;
+    }
+
+
+    const confirmar =
+        window.confirm(
+            `Marcar ${faltando.length} ${
+                faltando.length === 1
+                    ? "convidado"
+                    : "convidados"
+            } como ${
+                faltando.length === 1
+                    ? "presente"
+                    : "presentes"
+            }?\n\nEssa ação marca todos que ainda estão aguardando entrada.`
+        );
+
+
+    if (
+        !confirmar
+    ) {
+
+        return;
+    }
+
+
+    const textoOriginal =
+        marcarTodos.innerHTML;
+
+
+    marcarTodos.disabled =
+        true;
+
+    marcarTodos.textContent =
+        "Marcando todos...";
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                "/api/visitantes/status/todos",
+                {
+                    method:
+                        "PATCH",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    }
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok
+        ) {
+
+            throw new Error(
+                dados.erro ||
+                "Não foi possível marcar todos."
+            );
+
+        }
+
+
+        await carregarVisitantes(
+            true
+        );
+
+
+        // Depois da operação, abre a lista dos presentes.
+        abaAtual =
+            "entrou";
+
+        cardEntraram.classList.add(
+            "ativo"
+        );
+
+        cardFaltam.classList.remove(
+            "ativo"
+        );
+
+        atualizarTela();
+
+
+        toast(
+            `${dados.atualizados} ${
+                dados.atualizados === 1
+                    ? "entrada foi registrada"
+                    : "entradas foram registradas"
+            }.`,
+            "sucesso"
+        );
+
+    }
+
+    catch (erro) {
+
+        toast(
+            erro.message,
+            "erro"
+        );
+
+    }
+
+    finally {
+
+        marcarTodos.disabled =
+            false;
+
+        marcarTodos.innerHTML =
+            textoOriginal;
+
+    }
+
+}
+
+
+marcarTodos.addEventListener(
+    "click",
+    marcarTodosComoEntraram
+);
+
+
 // =====================================================
 // CADASTRO
 // =====================================================
@@ -5963,9 +6368,88 @@ setInterval(
 );
 
 
+
+// =====================================================
+// FAVICON PERSONALIZADO
+//
+// Basta colocar na pasta public um arquivo chamado:
+// favicon.ico OU favicon.png OU favicon.svg.
+// O primeiro que existir será usado automaticamente.
+// =====================================================
+
+async function carregarFaviconPersonalizado() {
+
+    const link =
+        document.getElementById(
+            "faviconSite"
+        );
+
+    if (!link) return;
+
+
+    const candidatos = [
+        {
+            url: "/favicon.ico",
+            tipo: "image/x-icon"
+        },
+        {
+            url: "/favicon.png",
+            tipo: "image/png"
+        },
+        {
+            url: "/favicon.svg",
+            tipo: "image/svg+xml"
+        }
+    ];
+
+
+    for (
+        const candidato
+        of candidatos
+    ) {
+
+        try {
+
+            const resposta =
+                await fetch(
+                    candidato.url,
+                    {
+                        method:
+                            "HEAD",
+
+                        cache:
+                            "no-store"
+                    }
+                );
+
+
+            if (
+                resposta.ok
+            ) {
+
+                link.href =
+                    candidato.url;
+
+                link.type =
+                    candidato.tipo;
+
+                return;
+            }
+
+        }
+
+        catch (_) {}
+
+    }
+
+}
+
+
 // =====================================================
 // INÍCIO
 // =====================================================
+
+carregarFaviconPersonalizado();
 
 carregarVisitantes();
 
