@@ -3181,17 +3181,26 @@ body {
 }
 
 .botao-familia {
-    min-height: 34px;
+    min-height: 42px;
+    min-width: 104px;
     border: 0;
-    border-radius: 10px;
-    padding: 7px 11px;
+    border-radius: 12px;
+    padding: 9px 15px;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: linear-gradient(135deg, #1AA874, #14885F);
     color: white;
-    font-size: 10px;
-    font-weight: 850;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.1px;
     white-space: nowrap;
-    box-shadow: 0 5px 14px rgba(25,149,104,.16);
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-shadow: 0 6px 16px rgba(25,149,104,.20);
 }
 
 .botao-familia:hover {
@@ -3217,7 +3226,13 @@ body {
 }
 
 @media(max-width: 850px) {
-    .botao-familia,
+    .botao-familia {
+        min-height: 39px;
+        min-width: 98px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
     .familia-todos-presentes {
         min-height: 30px;
         padding: 6px 8px;
@@ -3231,9 +3246,13 @@ body {
     }
 
     .botao-familia {
-        white-space: normal;
-        line-height: 1.1;
-        max-width: 90px;
+        min-height: 38px;
+        min-width: 94px;
+        padding: 8px 10px;
+        font-size: 11px;
+        white-space: nowrap;
+        line-height: 1;
+        max-width: none;
         text-align: center;
     }
 
