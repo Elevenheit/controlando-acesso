@@ -3015,9 +3015,7 @@ body {
 ===================================================== */
 
 .area-adicionar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px;
+    display: block;
 }
 
 .botao-todos {
@@ -3068,8 +3066,7 @@ body {
 
 @media(max-width: 850px) {
     .area-adicionar {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 7px;
+        display: block;
     }
 
     .botao-todos {
@@ -3089,7 +3086,7 @@ body {
 
 @media(max-width: 620px) {
     .area-adicionar {
-        grid-template-columns: 1fr;
+        display: block;
     }
 
     .botao-todos {
@@ -3162,6 +3159,79 @@ body {
 
     .rodape {
         margin-top: 5px !important;
+    }
+}
+
+
+/* =====================================================
+   BOTÃO DE ENTRADA DA FAMÍLIA INTEIRA
+===================================================== */
+
+.familia-acoes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.botao-familia {
+    min-height: 34px;
+    border: 0;
+    border-radius: 10px;
+    padding: 7px 11px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #1AA874, #14885F);
+    color: white;
+    font-size: 10px;
+    font-weight: 850;
+    white-space: nowrap;
+    box-shadow: 0 5px 14px rgba(25,149,104,.16);
+}
+
+.botao-familia:hover {
+    filter: brightness(.97);
+}
+
+.botao-familia:disabled {
+    cursor: wait;
+    opacity: .55;
+}
+
+.familia-todos-presentes {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: var(--verde-claro);
+    color: var(--verde-escuro);
+    font-size: 10px;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+@media(max-width: 850px) {
+    .botao-familia,
+    .familia-todos-presentes {
+        min-height: 30px;
+        padding: 6px 8px;
+        font-size: 9px;
+    }
+}
+
+@media(max-width: 620px) {
+    .familia-cabecalho-direita {
+        gap: 6px;
+    }
+
+    .botao-familia {
+        white-space: normal;
+        line-height: 1.1;
+        max-width: 90px;
+        text-align: center;
+    }
+
+    .familia-todos-presentes {
+        display: none;
     }
 }
 
@@ -3363,20 +3433,6 @@ body {
 
         </button>
 
-        <button
-            id="marcarTodos"
-            class="botao-todos"
-            type="button"
-            title="Marca como presentes todos os convidados que ainda não entraram"
-        >
-
-            <span class="todos-icone">
-                ✓
-            </span>
-
-            Marcar todos como entraram
-
-        </button>
 
     </div>
 
@@ -3651,8 +3707,7 @@ const textoConexao =
 const abrirCadastro =
     document.getElementById("abrirCadastro");
 
-const marcarTodos =
-    document.getElementById("marcarTodos");
+
 
 const modalCadastro =
     document.getElementById("modalCadastro");
@@ -4322,6 +4377,9 @@ function renderizarLista() {
                     chave,
                     {
                         chave,
+                        familiaCodigo:
+                            pessoa.familiaCodigo ||
+                            null,
                         familia:
                             pessoa.familia ||
                             `Família de ${pessoa.responsavel || pessoa.nome}`,
@@ -4676,6 +4734,75 @@ function renderizarLista() {
                 }</span>`;
 
 
+            const acoesFamilia =
+                document.createElement(
+                    "div"
+                );
+
+            acoesFamilia.className =
+                "familia-acoes";
+
+
+            if (
+                faltantes > 0
+            ) {
+
+                const botaoFamilia =
+                    document.createElement(
+                        "button"
+                    );
+
+                botaoFamilia.type =
+                    "button";
+
+                botaoFamilia.className =
+                    "botao-familia";
+
+                botaoFamilia.textContent =
+                    faltantes === 1
+                        ? "Marcar o restante"
+                        : `Marcar os ${faltantes}`;
+
+
+                botaoFamilia.onclick =
+                    evento => {
+
+                        evento.stopPropagation();
+
+                        marcarFamiliaComoEntrou(
+                            grupo,
+                            botaoFamilia
+                        );
+
+                    };
+
+
+                acoesFamilia.appendChild(
+                    botaoFamilia
+                );
+
+            }
+
+            else {
+
+                const todosPresentes =
+                    document.createElement(
+                        "span"
+                    );
+
+                todosPresentes.className =
+                    "familia-todos-presentes";
+
+                todosPresentes.textContent =
+                    "✓ Todos entraram";
+
+                acoesFamilia.appendChild(
+                    todosPresentes
+                );
+
+            }
+
+
             const seta =
                 document.createElement(
                     "span"
@@ -4690,6 +4817,10 @@ function renderizarLista() {
 
             direita.appendChild(
                 quantidade
+            );
+
+            direita.appendChild(
+                acoesFamilia
             );
 
             direita.appendChild(
@@ -5155,6 +5286,216 @@ busca.addEventListener(
     "input",
     renderizarLista
 );
+
+
+
+// =====================================================
+// MARCAR UMA FAMÍLIA INTEIRA COMO PRESENTE
+// =====================================================
+
+async function marcarFamiliaComoEntrou(
+    grupo,
+    botao
+) {
+
+    const faltando =
+        visitantes.filter(
+            pessoa =>
+                String(
+                    pessoa.familiaCodigo ||
+                    pessoa.familia ||
+                    pessoa.responsavel ||
+                    pessoa.nome
+                ) ===
+                    grupo.chave &&
+                pessoa.status !==
+                    "entrou"
+        );
+
+
+    if (
+        faltando.length === 0
+    ) {
+
+        toast(
+            "Todos dessa família já entraram.",
+            "sucesso"
+        );
+
+        return;
+    }
+
+
+    const confirmar =
+        window.confirm(
+            `Marcar como presentes todos os ${faltando.length} ${
+                faltando.length === 1
+                    ? "convidado que ainda falta"
+                    : "convidados que ainda faltam"
+            } da ${grupo.familia}?`
+        );
+
+
+    if (
+        !confirmar
+    ) {
+
+        return;
+    }
+
+
+    const textoOriginal =
+        botao.textContent;
+
+
+    botao.disabled =
+        true;
+
+    botao.textContent =
+        "Salvando...";
+
+
+    try {
+
+        let resposta;
+
+
+        if (
+            grupo.familiaCodigo
+        ) {
+
+            resposta =
+                await fetch(
+                    `/api/familias/${encodeURIComponent(
+                        grupo.familiaCodigo
+                    )}/status`,
+                    {
+                        method:
+                            "PATCH",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                status:
+                                    "entrou"
+                            })
+                    }
+                );
+
+        }
+
+        else {
+
+            // Compatibilidade com algum registro antigo sem código de família.
+            // Faz a mesma operação pessoa por pessoa.
+            const resultados =
+                await Promise.all(
+                    faltando.map(
+                        pessoa =>
+                            fetch(
+                                `/api/visitantes/${encodeURIComponent(
+                                    pessoa.id
+                                )}/status`,
+                                {
+                                    method:
+                                        "PATCH",
+
+                                    headers: {
+                                        "Content-Type":
+                                            "application/json"
+                                    },
+
+                                    body:
+                                        JSON.stringify({
+                                            status:
+                                                "entrou"
+                                        })
+                                }
+                            )
+                    )
+                );
+
+            if (
+                resultados.some(
+                    item =>
+                        !item.ok
+                )
+            ) {
+
+                throw new Error(
+                    "Não foi possível marcar toda a família."
+                );
+
+            }
+
+
+            resposta = {
+                ok: true,
+                json: async () => ({
+                    atualizados:
+                        faltando.length
+                })
+            };
+
+        }
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (
+            !resposta.ok
+        ) {
+
+            throw new Error(
+                dados.erro ||
+                "Não foi possível marcar a família."
+            );
+
+        }
+
+
+        await carregarVisitantes(
+            true
+        );
+
+
+        atualizarTela();
+
+
+        toast(
+            `${dados.atualizados} ${
+                dados.atualizados === 1
+                    ? "entrada registrada"
+                    : "entradas registradas"
+            } na ${grupo.familia}.`,
+            "sucesso"
+        );
+
+    }
+
+    catch (erro) {
+
+        botao.disabled =
+            false;
+
+        botao.textContent =
+            textoOriginal;
+
+
+        toast(
+            erro.message,
+            "erro"
+        );
+
+    }
+
+}
 
 
 // =====================================================
