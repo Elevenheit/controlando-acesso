@@ -1,0 +1,4434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Controle de Acesso</title>
+
+<style>
+
+/* =====================================================
+   CORES
+===================================================== */
+
+:root {
+
+    --smurf-1: #0E8ED2;
+    --smurf-2: #24A2E2;
+    --smurf-3: #62C9F3;
+    --smurf-claro: #EAF8FF;
+
+    --verde: #199568;
+    --verde-escuro: #137A55;
+    --verde-claro: #E8F8F0;
+
+    --vermelho: #D94C4C;
+    --vermelho-claro: #FFF0F0;
+
+    --amarelo: #FFE066;
+
+    --branco: #FFFFFF;
+
+    --fundo: #F1F8FC;
+
+    --texto: #17303E;
+    --texto-secundario: #687D88;
+
+    --borda: #D9E8F0;
+
+    --sombra:
+        0 10px 30px rgba(16, 89, 130, .10);
+}
+
+
+/* =====================================================
+   BASE
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    min-height: 100%;
+}
+
+
+body {
+
+    background:
+        linear-gradient(
+            180deg,
+            #F4FBFF 0%,
+            #F1F7FA 100%
+        );
+
+    color:
+        var(--texto);
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    overflow-x: hidden;
+}
+
+
+button,
+input {
+    font-family: inherit;
+}
+
+
+/* =====================================================
+   CABEÇALHO SMURF
+===================================================== */
+
+.topo {
+
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--smurf-1),
+            var(--smurf-2) 45%,
+            var(--smurf-3)
+        );
+
+    color: white;
+
+    box-shadow:
+        0 10px 30px rgba(16, 104, 154, .18);
+}
+
+
+/* BOLHA DECORATIVA */
+
+.topo::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 430px;
+    height: 430px;
+
+    top: -310px;
+    right: -80px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.14);
+
+}
+
+
+/* SEGUNDA BOLHA */
+
+.topo::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 210px;
+    height: 210px;
+
+    left: 12%;
+    bottom: -170px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.09);
+
+}
+
+
+.topo-conteudo {
+
+    position: relative;
+
+    z-index: 2;
+
+    width: 100%;
+    max-width: 1500px;
+
+    margin: auto;
+
+    padding:
+        21px 24px 27px;
+
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+}
+
+
+/* =====================================================
+   MARCA
+===================================================== */
+
+.marca {
+
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+
+    min-width: 0;
+}
+
+
+.marca-icone {
+
+    position: relative;
+
+    flex: 0 0 auto;
+
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius:
+        23px 23px 29px 29px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #FFFFFF,
+            #E9F9FF
+        );
+
+    color:
+        var(--smurf-2);
+
+    font-size: 31px;
+    font-weight: 900;
+
+    transform:
+        rotate(-3deg);
+
+    box-shadow:
+        0 10px 26px rgba(4, 78, 120, .22);
+}
+
+
+.marca-icone::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 14px;
+    height: 14px;
+
+    right: -4px;
+    bottom: 6px;
+
+    border-radius: 50%;
+
+    background:
+        var(--amarelo);
+
+    border:
+        3px solid var(--smurf-2);
+}
+
+
+.marca h1 {
+
+    margin: 0;
+
+    font-size:
+        clamp(22px, 2vw, 31px);
+
+    font-weight: 900;
+
+    letter-spacing:
+        -.7px;
+
+    line-height: 1;
+}
+
+
+.marca p {
+
+    margin:
+        6px 0 0;
+
+    color:
+        rgba(255,255,255,.90);
+
+    font-size:
+        clamp(11px, 1vw, 14px);
+
+    font-weight: 600;
+}
+
+
+.evento-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 9px;
+
+    padding:
+        6px 11px;
+
+    border:
+        1px solid rgba(255,255,255,.18);
+
+    border-radius:
+        999px;
+
+    background:
+        rgba(255,255,255,.14);
+
+    color: white;
+
+    font-size: 11px;
+    font-weight: 750;
+
+    backdrop-filter:
+        blur(4px);
+}
+
+
+/* =====================================================
+   CONEXÃO
+===================================================== */
+
+.topo-direita {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-end;
+
+    gap: 9px;
+}
+
+
+.conexao {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding:
+        9px 14px;
+
+    border:
+        1px solid rgba(255,255,255,.18);
+
+    border-radius:
+        999px;
+
+    background:
+        rgba(255,255,255,.14);
+
+    color:
+        rgba(255,255,255,.95);
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.bolinha {
+
+    width: 9px;
+    height: 9px;
+
+    border-radius: 50%;
+
+    background:
+        #D5EAF5;
+}
+
+
+.conexao.online .bolinha {
+
+    background:
+        #5AF0AD;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(90,240,173,.15);
+}
+
+
+.frase-topo {
+
+    color:
+        rgba(255,255,255,.78);
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   ONDINHA DO CABEÇALHO
+===================================================== */
+
+.onda {
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+
+    bottom: -1px;
+
+    height: 17px;
+
+    display: flex;
+
+    overflow: hidden;
+}
+
+
+.onda span {
+
+    flex: 1;
+
+    min-width: 45px;
+
+    height: 26px;
+
+    margin-left: -4px;
+
+    border-radius:
+        50% 50% 0 0;
+
+    background:
+        var(--fundo);
+}
+
+
+/* =====================================================
+   BUSCA
+===================================================== */
+
+.painel-busca {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 100;
+
+    padding:
+        12px 24px;
+
+    background:
+        rgba(241,248,252,.94);
+
+    border-bottom:
+        1px solid rgba(217,232,240,.8);
+
+    backdrop-filter:
+        blur(10px);
+}
+
+
+.painel-busca-interno {
+
+    width: 100%;
+    max-width: 1500px;
+
+    margin: auto;
+}
+
+
+.busca {
+
+    width: 100%;
+
+    min-height: 56px;
+
+    padding:
+        0 17px;
+
+    display: flex;
+
+    align-items: center;
+
+    border:
+        1px solid var(--borda);
+
+    border-radius:
+        16px;
+
+    background:
+        white;
+
+    box-shadow:
+        var(--sombra);
+
+    transition:
+        .15s;
+}
+
+
+.busca:focus-within {
+
+    border-color:
+        var(--smurf-2);
+
+    box-shadow:
+        0 10px 30px
+        rgba(36,162,226,.15);
+}
+
+
+.busca-icone {
+
+    margin-right:
+        11px;
+
+    font-size: 20px;
+}
+
+
+.busca input {
+
+    width: 100%;
+    min-width: 0;
+
+    border: 0;
+    outline: 0;
+
+    background:
+        transparent;
+
+    color:
+        var(--texto);
+
+    font-size:
+        clamp(14px, 1.2vw, 17px);
+}
+
+
+.busca input::placeholder {
+
+    color:
+        #93A5AF;
+}
+
+
+/* =====================================================
+   CONTEÚDO
+===================================================== */
+
+.container {
+
+    width: 100%;
+    max-width: 1500px;
+
+    margin: auto;
+
+    padding:
+        16px 24px 25px;
+}
+
+
+/* =====================================================
+   PAINEL DE NÚMEROS
+===================================================== */
+
+.resumo {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-bottom:
+        11px;
+}
+
+
+.resumo-card {
+
+    min-height: 80px;
+
+    padding:
+        14px 18px;
+
+    border:
+        1px solid var(--borda);
+
+    border-radius:
+        17px;
+
+    background:
+        white;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    box-shadow:
+        var(--sombra);
+}
+
+
+.resumo-card.faltam {
+
+    cursor: pointer;
+}
+
+
+.resumo-card.entraram {
+
+    cursor: pointer;
+}
+
+
+.resumo-card.ativo {
+
+    border-color:
+        var(--smurf-2);
+
+    box-shadow:
+        0 8px 28px
+        rgba(36,162,226,.15);
+}
+
+
+.resumo-info small {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    color:
+        var(--texto-secundario);
+
+    font-size:
+        clamp(10px, .85vw, 12px);
+
+    font-weight: 750;
+
+    text-transform: uppercase;
+
+    letter-spacing:
+        .5px;
+}
+
+
+.resumo-info strong {
+
+    display: block;
+
+    font-size:
+        clamp(20px, 2vw, 30px);
+
+    line-height: 1;
+}
+
+
+.resumo-card.faltam strong {
+
+    color:
+        var(--smurf-1);
+}
+
+
+.resumo-card.entraram strong {
+
+    color:
+        var(--verde);
+}
+
+
+.resumo-icone {
+
+    width: 46px;
+    height: 46px;
+
+    flex: 0 0 auto;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius:
+        15px;
+
+    font-size: 21px;
+}
+
+
+.faltam .resumo-icone {
+
+    background:
+        var(--smurf-claro);
+
+    color:
+        var(--smurf-1);
+}
+
+
+.entraram .resumo-icone {
+
+    background:
+        var(--verde-claro);
+
+    color:
+        var(--verde);
+}
+
+
+/* =====================================================
+   ADICIONAR CONVIDADO
+===================================================== */
+
+.area-adicionar {
+
+    margin-bottom:
+        11px;
+}
+
+
+.botao-adicionar {
+
+    width: 100%;
+
+    min-height: 64px;
+
+    border: 0;
+
+    border-radius:
+        17px;
+
+    padding:
+        11px 20px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 11px;
+
+    cursor: pointer;
+
+    background:
+        linear-gradient(
+            135deg,
+            #25A5E5,
+            #1689C7
+        );
+
+    color: white;
+
+    font-size:
+        clamp(15px, 1.2vw, 18px);
+
+    font-weight: 850;
+
+    box-shadow:
+        0 9px 25px
+        rgba(36,162,226,.24);
+
+    transition:
+        transform .1s,
+        filter .15s;
+}
+
+
+.botao-adicionar:hover {
+
+    filter:
+        brightness(.97);
+}
+
+
+.botao-adicionar:active {
+
+    transform:
+        scale(.995);
+}
+
+
+.adicionar-icone {
+
+    width: 32px;
+    height: 32px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.18);
+
+    font-size: 23px;
+}
+
+
+/* =====================================================
+   LISTA
+===================================================== */
+
+.lista-container {
+
+    width: 100%;
+
+    overflow: hidden;
+
+    border:
+        1px solid var(--borda);
+
+    border-radius:
+        18px;
+
+    background:
+        white;
+
+    box-shadow:
+        var(--sombra);
+}
+
+
+.lista-scroll {
+
+    width: 100%;
+
+    height:
+        calc(100vh - 430px);
+
+    min-height:
+        220px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+.pessoa {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(180px,1fr)
+        minmax(130px,190px)
+        minmax(130px,180px);
+
+    gap: 14px;
+
+    align-items: center;
+
+    padding:
+        12px 16px;
+
+    border-bottom:
+        1px solid #EDF2F5;
+
+    transition:
+        background .13s;
+}
+
+
+.pessoa:last-child {
+
+    border-bottom: 0;
+}
+
+
+.pessoa:hover {
+
+    background:
+        #F7FCFF;
+}
+
+
+.pessoa.entrou {
+
+    background:
+        var(--verde-claro);
+}
+
+
+.pessoa.entrou:hover {
+
+    background:
+        #DFF3E9;
+}
+
+
+.nome {
+
+    font-size:
+        clamp(13px, 1vw, 16px);
+
+    font-weight: 800;
+
+    word-break:
+        break-word;
+}
+
+
+.cpf {
+
+    margin-top: 3px;
+
+    color:
+        var(--texto-secundario);
+
+    font-family:
+        Consolas,
+        "Courier New",
+        monospace;
+
+    font-size:
+        clamp(10px, .85vw, 13px);
+}
+
+
+.status-info {
+
+    color:
+        var(--texto-secundario);
+
+    font-size:
+        clamp(10px, .8vw, 13px);
+}
+
+
+.status-info strong {
+
+    display: block;
+
+    margin-bottom: 3px;
+
+    color:
+        var(--texto);
+
+    font-size:
+        clamp(11px, .9vw, 13px);
+}
+
+
+/* =====================================================
+   BOTÕES
+===================================================== */
+
+.botao {
+
+    width: 100%;
+
+    min-height: 42px;
+
+    border: 0;
+
+    border-radius:
+        10px;
+
+    padding:
+        8px 12px;
+
+    cursor: pointer;
+
+    font-size:
+        clamp(11px, .9vw, 14px);
+
+    font-weight: 800;
+
+    transition:
+        .1s;
+}
+
+
+.botao:hover {
+
+    opacity: .92;
+}
+
+
+.botao:active {
+
+    transform:
+        scale(.98);
+}
+
+
+.botao:disabled {
+
+    cursor: wait;
+
+    opacity: .55;
+}
+
+
+.botao-entrada {
+
+    background:
+        var(--verde);
+
+    color: white;
+}
+
+
+.botao-entrada:hover {
+
+    background:
+        var(--verde-escuro);
+}
+
+
+.botao-desfazer {
+
+    background:
+        white;
+
+    color:
+        #A23D3D;
+
+    border:
+        1px solid #E7C5C5;
+}
+
+
+/* =====================================================
+   LISTA VAZIA
+===================================================== */
+
+.vazio {
+
+    padding:
+        clamp(35px, 7vh, 80px)
+        20px;
+
+    text-align: center;
+
+    color:
+        var(--texto-secundario);
+}
+
+
+.vazio-icone {
+
+    margin-bottom:
+        10px;
+
+    font-size:
+        34px;
+}
+
+
+.vazio strong {
+
+    display: block;
+
+    margin-bottom:
+        5px;
+
+    color:
+        var(--texto);
+
+    font-size:
+        17px;
+}
+
+
+/* =====================================================
+   RODAPÉ
+===================================================== */
+
+.rodape {
+
+    margin-top:
+        9px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    color:
+        var(--texto-secundario);
+
+    font-size:
+        clamp(10px, .8vw, 12px);
+}
+
+
+.relatorio {
+
+    color:
+        var(--smurf-1);
+
+    font-weight: 800;
+
+    text-decoration: none;
+}
+
+
+.relatorio:hover {
+
+    text-decoration: underline;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.modal-fundo {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 15px;
+
+    background:
+        rgba(10, 31, 43, .50);
+
+    backdrop-filter:
+        blur(4px);
+}
+
+
+.modal-fundo.aberto {
+
+    display: flex;
+}
+
+
+.modal {
+
+    width: 100%;
+    max-width: 470px;
+
+    max-height:
+        calc(100vh - 30px);
+
+    overflow-y: auto;
+
+    padding:
+        clamp(20px, 3vw, 28px);
+
+    border-radius:
+        21px;
+
+    background:
+        white;
+
+    box-shadow:
+        0 26px 85px
+        rgba(0,0,0,.22);
+
+    animation:
+        modalEntrada .15s ease;
+}
+
+
+@keyframes modalEntrada {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(6px)
+            scale(.97);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+
+    }
+
+}
+
+
+.modal-icone {
+
+    width: 50px;
+    height: 50px;
+
+    margin-bottom:
+        14px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        var(--vermelho-claro);
+
+    color:
+        var(--vermelho);
+
+    font-size: 22px;
+    font-weight: 900;
+}
+
+
+.modal-icone.azul {
+
+    background:
+        var(--smurf-claro);
+
+    color:
+        var(--smurf-2);
+}
+
+
+.modal h2 {
+
+    margin: 0;
+
+    font-size:
+        clamp(18px, 2vw, 22px);
+}
+
+
+.modal-descricao {
+
+    margin:
+        8px 0 0;
+
+    color:
+        var(--texto-secundario);
+
+    line-height: 1.5;
+
+    font-size:
+        clamp(12px, 1vw, 14px);
+}
+
+
+/* =====================================================
+   CAMPOS
+===================================================== */
+
+.campo {
+
+    margin-top:
+        16px;
+}
+
+
+.campo label {
+
+    display: block;
+
+    margin-bottom: 6px;
+
+    color:
+        var(--texto);
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.campo input {
+
+    width: 100%;
+    height: 50px;
+
+    border:
+        1px solid var(--borda);
+
+    border-radius:
+        11px;
+
+    padding:
+        0 13px;
+
+    outline: 0;
+
+    color:
+        var(--texto);
+
+    font-size: 15px;
+}
+
+
+.campo input:focus {
+
+    border-color:
+        var(--smurf-2);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(36,162,226,.10);
+}
+
+
+.modal-pessoa {
+
+    margin-top:
+        17px;
+
+    padding:
+        13px 14px;
+
+    border-radius:
+        11px;
+
+    background:
+        var(--fundo);
+}
+
+
+.modal-pessoa strong {
+
+    display: block;
+
+    margin-bottom: 3px;
+}
+
+
+/* =====================================================
+   BOTÕES MODAL
+===================================================== */
+
+.modal-botoes {
+
+    margin-top:
+        20px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2,minmax(0,1fr));
+
+    gap: 9px;
+}
+
+
+.cancelar {
+
+    background:
+        #EDF2F5;
+
+    color:
+        var(--texto);
+}
+
+
+.confirmar {
+
+    background:
+        var(--vermelho);
+
+    color: white;
+}
+
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+#toasts {
+
+    position: fixed;
+
+    right: 15px;
+    bottom: 15px;
+
+    z-index: 2000;
+
+    width:
+        min(380px, calc(100% - 30px));
+}
+
+
+.toast {
+
+    width: 100%;
+
+    margin-top: 7px;
+
+    padding:
+        12px 15px;
+
+    border-radius:
+        11px;
+
+    background:
+        #17303E;
+
+    color: white;
+
+    font-size: 13px;
+
+    box-shadow:
+        0 12px 35px
+        rgba(0,0,0,.18);
+}
+
+
+.toast.sucesso {
+
+    background:
+        var(--verde);
+}
+
+
+.toast.erro {
+
+    background:
+        var(--vermelho);
+}
+
+
+/* =====================================================
+   NOTEBOOK / TELAS MÉDIAS
+===================================================== */
+
+@media(max-width: 1100px) {
+
+    .topo-conteudo,
+    .painel-busca,
+    .container {
+
+        padding-left: 15px;
+        padding-right: 15px;
+
+    }
+
+
+    .pessoa {
+
+        grid-template-columns:
+            minmax(170px,1fr)
+            145px
+            145px;
+
+        gap: 9px;
+
+        padding:
+            10px 12px;
+
+    }
+
+}
+
+
+/* =====================================================
+   800x600 / TELAS BAIXAS
+===================================================== */
+
+@media(max-width: 850px),
+      (max-height: 650px) {
+
+    .topo-conteudo {
+
+        padding-top: 10px;
+        padding-bottom: 16px;
+
+    }
+
+
+    .marca {
+
+        gap: 9px;
+
+    }
+
+
+    .marca-icone {
+
+        width: 45px;
+        height: 45px;
+
+        border-radius:
+            16px 16px 20px 20px;
+
+        font-size: 22px;
+
+    }
+
+
+    .marca h1 {
+
+        font-size: 19px;
+
+    }
+
+
+    .marca p {
+
+        margin-top: 3px;
+
+        font-size: 10px;
+
+    }
+
+
+    .evento-badge {
+
+        margin-top: 5px;
+
+        padding:
+            4px 8px;
+
+        font-size: 9px;
+
+    }
+
+
+    .frase-topo {
+
+        display: none;
+
+    }
+
+
+    .conexao {
+
+        padding:
+            6px 9px;
+
+        font-size: 10px;
+
+    }
+
+
+    .painel-busca {
+
+        padding-top: 7px;
+        padding-bottom: 7px;
+
+    }
+
+
+    .busca {
+
+        min-height: 44px;
+
+        border-radius: 11px;
+
+    }
+
+
+    .busca input {
+
+        font-size: 13px;
+
+    }
+
+
+    .container {
+
+        padding-top: 8px;
+        padding-bottom: 12px;
+
+    }
+
+
+    .resumo {
+
+        gap: 6px;
+
+        margin-bottom: 7px;
+
+    }
+
+
+    .resumo-card {
+
+        min-height: 55px;
+
+        padding:
+            8px 11px;
+
+        border-radius: 11px;
+
+    }
+
+
+    .resumo-info strong {
+
+        font-size: 20px;
+
+    }
+
+
+    .resumo-info small {
+
+        font-size: 9px;
+
+    }
+
+
+    .resumo-icone {
+
+        width: 34px;
+        height: 34px;
+
+        border-radius: 10px;
+
+        font-size: 16px;
+
+    }
+
+
+    .area-adicionar {
+
+        margin-bottom: 7px;
+
+    }
+
+
+    .botao-adicionar {
+
+        min-height: 45px;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+
+    }
+
+
+    .adicionar-icone {
+
+        width: 24px;
+        height: 24px;
+
+        font-size: 18px;
+
+    }
+
+
+    .lista-scroll {
+
+        height:
+            calc(100vh - 300px);
+
+        min-height: 180px;
+
+    }
+
+
+    .pessoa {
+
+        grid-template-columns:
+            minmax(145px,1fr)
+            115px
+            120px;
+
+        gap: 7px;
+
+        padding:
+            7px 9px;
+
+    }
+
+
+    .nome {
+
+        font-size: 12px;
+
+    }
+
+
+    .cpf,
+    .status-info {
+
+        font-size: 10px;
+
+    }
+
+
+    .status-info strong {
+
+        font-size: 11px;
+
+    }
+
+
+    .botao {
+
+        min-height: 33px;
+
+        padding:
+            5px 7px;
+
+        font-size: 10px;
+
+    }
+
+}
+
+
+/* =====================================================
+   TELAS ESTREITAS
+===================================================== */
+
+@media(max-width: 600px) {
+
+    .topo-direita {
+
+        display: none;
+
+    }
+
+
+    .pessoa {
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 7px;
+
+    }
+
+
+    .modal-botoes {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+}
+/* =====================================================
+   CELULAR - VISUAL COMPLETO
+===================================================== */
+
+@media (max-width: 650px) {
+
+    /* -----------------------------------------
+       CORPO
+    ----------------------------------------- */
+
+    body {
+        background:
+            linear-gradient(
+                180deg,
+                #EAF8FF 0%,
+                #F7FBFD 230px
+            );
+    }
+
+
+    /* -----------------------------------------
+       CABEÇALHO
+    ----------------------------------------- */
+
+    .topo {
+        border-radius:
+            0 0 28px 28px;
+
+        box-shadow:
+            0 8px 25px
+            rgba(17, 126, 183, .20);
+    }
+
+
+    .topo-conteudo {
+        padding:
+            15px 16px 25px;
+
+        justify-content:
+            center;
+    }
+
+
+    .marca {
+        width: 100%;
+
+        justify-content:
+            flex-start;
+
+        gap: 12px;
+    }
+
+
+    .marca-icone {
+        width: 52px;
+        height: 52px;
+
+        border-radius:
+            17px 17px 22px 22px;
+
+        font-size: 25px;
+
+        box-shadow:
+            0 8px 18px
+            rgba(5, 79, 121, .22);
+    }
+
+
+    .marca-icone::after {
+        width: 11px;
+        height: 11px;
+    }
+
+
+    .marca h1 {
+        font-size: 21px;
+
+        line-height: 1.05;
+    }
+
+
+    .marca p {
+        display: block;
+
+        margin-top: 4px;
+
+        font-size: 10px;
+
+        line-height: 1.3;
+    }
+
+
+    .evento-badge {
+        margin-top: 6px;
+
+        padding:
+            4px 8px;
+
+        font-size: 9px;
+    }
+
+
+    .topo-direita {
+        display: none;
+    }
+
+
+    /* -----------------------------------------
+       BUSCA
+    ----------------------------------------- */
+
+    .painel-busca {
+        position: sticky;
+
+        top: 0;
+
+        padding:
+            10px 11px;
+
+        background:
+            rgba(241, 248, 252, .95);
+
+        backdrop-filter:
+            blur(10px);
+    }
+
+
+    .busca {
+        min-height: 52px;
+
+        padding:
+            0 14px;
+
+        border-radius: 15px;
+
+        box-shadow:
+            0 6px 20px
+            rgba(16, 89, 130, .09);
+    }
+
+
+    .busca-icone {
+        font-size: 18px;
+
+        margin-right: 9px;
+    }
+
+
+    .busca input {
+        font-size: 15px;
+    }
+
+
+    /* -----------------------------------------
+       CONTEÚDO
+    ----------------------------------------- */
+
+    .container {
+        padding:
+            11px 11px 20px;
+    }
+
+
+    /* -----------------------------------------
+       CONTADORES
+    ----------------------------------------- */
+
+    .resumo {
+        gap: 8px;
+
+        margin-bottom: 9px;
+    }
+
+
+    .resumo-card {
+        min-height: 78px;
+
+        padding:
+            12px 12px;
+
+        border-radius: 16px;
+
+        box-shadow:
+            0 5px 18px
+            rgba(25, 80, 110, .07);
+    }
+
+
+    .resumo-info small {
+        margin-bottom: 5px;
+
+        font-size: 9px;
+
+        letter-spacing: .2px;
+    }
+
+
+    .resumo-info strong {
+        font-size: 25px;
+    }
+
+
+    .resumo-icone {
+        width: 37px;
+        height: 37px;
+
+        border-radius: 12px;
+
+        font-size: 17px;
+    }
+
+
+    /* -----------------------------------------
+       BOTÃO ADICIONAR
+    ----------------------------------------- */
+
+    .area-adicionar {
+        margin-bottom: 10px;
+    }
+
+
+    .botao-adicionar {
+        min-height: 58px;
+
+        padding:
+            10px 14px;
+
+        border-radius: 16px;
+
+        font-size: 15px;
+
+        box-shadow:
+            0 7px 20px
+            rgba(36, 162, 226, .22);
+    }
+
+
+    .adicionar-icone {
+        width: 29px;
+        height: 29px;
+
+        font-size: 21px;
+    }
+
+
+    /* -----------------------------------------
+       LISTA
+    ----------------------------------------- */
+
+    .lista-container {
+        border-radius: 18px;
+
+        box-shadow:
+            0 6px 22px
+            rgba(24, 75, 100, .08);
+    }
+
+
+    .lista-scroll {
+        height:
+            calc(100vh - 390px);
+
+        min-height: 280px;
+
+        overflow-y: auto;
+    }
+
+
+    /* cada pessoa vira um cartão */
+
+    .pessoa {
+        display: grid;
+
+        grid-template-columns:
+            1fr;
+
+        gap: 9px;
+
+        padding:
+            14px;
+
+        margin:
+            8px;
+
+        border:
+            1px solid #E5EEF3;
+
+        border-radius: 15px;
+
+        background:
+            #FFFFFF;
+
+        box-shadow:
+            0 3px 12px
+            rgba(24, 75, 100, .05);
+    }
+
+
+    .pessoa:last-child {
+        border-bottom:
+            1px solid #E5EEF3;
+    }
+
+
+    .pessoa.entrou {
+        background:
+            linear-gradient(
+                135deg,
+                #F0FBF6,
+                #E4F7ED
+            );
+
+        border-color:
+            #CDEBDD;
+    }
+
+
+    .nome {
+        font-size: 16px;
+
+        line-height: 1.2;
+    }
+
+
+    .cpf {
+        margin-top: 4px;
+
+        font-size: 12px;
+    }
+
+
+    .status-info {
+        padding:
+            8px 10px;
+
+        border-radius: 9px;
+
+        background:
+            #F4F8FA;
+
+        font-size: 11px;
+    }
+
+
+    .pessoa.entrou
+    .status-info {
+        background:
+            rgba(255,255,255,.55);
+    }
+
+
+    .status-info strong {
+        margin-bottom: 2px;
+
+        font-size: 12px;
+    }
+
+
+    /* -----------------------------------------
+       BOTÕES DAS PESSOAS
+    ----------------------------------------- */
+
+    .botao {
+        min-height: 47px;
+
+        border-radius: 11px;
+
+        font-size: 13px;
+    }
+
+
+    .botao-entrada {
+        background:
+            linear-gradient(
+                135deg,
+                #1AA874,
+                #14885F
+            );
+
+        box-shadow:
+            0 5px 14px
+            rgba(25, 149, 104, .17);
+    }
+
+
+    .botao-desfazer {
+        background:
+            rgba(255,255,255,.85);
+
+        border:
+            1px solid #E7C6C6;
+    }
+
+
+    /* -----------------------------------------
+       RODAPÉ
+    ----------------------------------------- */
+
+    .rodape {
+        margin-top: 10px;
+
+        padding:
+            0 3px;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 7px;
+
+        text-align: center;
+
+        font-size: 10px;
+    }
+
+
+    .relatorio {
+        padding:
+            10px;
+
+        border-radius: 10px;
+
+        background:
+            var(--smurf-claro);
+
+        text-align: center;
+
+        font-size: 12px;
+
+        text-decoration: none;
+    }
+
+
+    /* -----------------------------------------
+       MODAIS
+    ----------------------------------------- */
+
+    .modal-fundo {
+        align-items:
+            flex-end;
+
+        padding: 0;
+    }
+
+
+    .modal {
+        max-width: none;
+
+        width: 100%;
+
+        max-height:
+            92vh;
+
+        padding:
+            22px 18px 25px;
+
+        border-radius:
+            25px 25px 0 0;
+
+        animation:
+            modalCelular .18s ease;
+    }
+
+
+    @keyframes modalCelular {
+
+        from {
+            opacity: 0;
+
+            transform:
+                translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+
+            transform:
+                translateY(0);
+        }
+
+    }
+
+
+    .modal-icone {
+        width: 46px;
+        height: 46px;
+
+        margin-bottom: 12px;
+    }
+
+
+    .modal h2 {
+        font-size: 20px;
+    }
+
+
+    .modal-descricao {
+        font-size: 13px;
+    }
+
+
+    /* campos maiores para digitar no celular */
+
+    .campo {
+        margin-top: 17px;
+    }
+
+
+    .campo label {
+        font-size: 13px;
+    }
+
+
+    .campo input {
+        height: 54px;
+
+        border-radius: 12px;
+
+        font-size: 16px;
+    }
+
+
+    /*
+       16px também evita aquele zoom automático
+       chato do navegador em alguns celulares.
+    */
+
+
+    .modal-botoes {
+        grid-template-columns:
+            1fr;
+
+        gap: 8px;
+
+        margin-top: 20px;
+    }
+
+
+    .modal-botoes .botao {
+        min-height: 50px;
+
+        font-size: 14px;
+    }
+
+
+    /* -----------------------------------------
+       AVISOS
+    ----------------------------------------- */
+
+    #toasts {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+
+        width: auto;
+    }
+
+
+    .toast {
+        border-radius: 12px;
+
+        font-size: 12px;
+
+        text-align: center;
+    }
+
+}
+
+
+/* =====================================================
+   CELULARES BEM PEQUENOS
+   Ex: 320px / 360px
+===================================================== */
+
+@media (max-width: 380px) {
+
+    .marca-icone {
+        width: 45px;
+        height: 45px;
+
+        font-size: 21px;
+    }
+
+
+    .marca h1 {
+        font-size: 18px;
+    }
+
+
+    .marca p {
+        font-size: 9px;
+    }
+
+
+    .evento-badge {
+        display: none;
+    }
+
+
+    .resumo-card {
+        min-height: 70px;
+
+        padding: 10px;
+    }
+
+
+    .resumo-info strong {
+        font-size: 21px;
+    }
+
+
+    .resumo-icone {
+        width: 31px;
+        height: 31px;
+
+        font-size: 14px;
+    }
+
+
+    .botao-adicionar {
+        font-size: 14px;
+    }
+
+
+    .lista-scroll {
+        height:
+            calc(100vh - 350px);
+    }
+
+}
+
+
+/* =====================================================
+   CELULAR DEITADO
+===================================================== */
+
+@media (
+    max-height: 500px
+)
+and (
+    orientation: landscape
+) {
+
+    .topo {
+        display: none;
+    }
+
+
+    .painel-busca {
+        padding:
+            5px 10px;
+    }
+
+
+    .busca {
+        min-height: 40px;
+    }
+
+
+    .container {
+        padding-top: 5px;
+    }
+
+
+    .resumo-card {
+        min-height: 47px;
+    }
+
+
+    .resumo-icone {
+        display: none;
+    }
+
+
+    .botao-adicionar {
+        min-height: 40px;
+    }
+
+
+    .lista-scroll {
+        height:
+            calc(100vh - 180px);
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     CABEÇALHO
+===================================================== -->
+
+<header class="topo">
+
+    <div class="topo-conteudo">
+
+
+        <div class="marca">
+
+
+            <div class="marca-icone">
+                ✓
+            </div>
+
+
+            <div>
+
+                <h1>
+                    Controle de Acesso
+                </h1>
+
+                <p>
+                    Entrada rápida, organizada e sincronizada
+                </p>
+
+                <div class="evento-badge">
+                    ✦ Vila Azul • Lista de convidados
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="topo-direita">
+
+
+            <div
+                id="conexao"
+                class="conexao"
+            >
+
+                <span class="bolinha"></span>
+
+                <span id="textoConexao">
+                    Conectando...
+                </span>
+
+            </div>
+
+
+            <div class="frase-topo">
+                ✨ Tudo pronto para receber a galera
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="onda">
+
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+
+    </div>
+
+</header>
+
+
+<!-- =====================================================
+     BUSCA
+===================================================== -->
+
+<section class="painel-busca">
+
+    <div class="painel-busca-interno">
+
+        <label class="busca">
+
+            <span class="busca-icone">
+                🔎
+            </span>
+
+            <input
+                id="busca"
+                type="search"
+                placeholder="Pesquisar convidado por nome ou CPF..."
+                autocomplete="off"
+                autofocus
+            >
+
+        </label>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     PRINCIPAL
+===================================================== -->
+
+<main class="container">
+
+
+    <!-- CONTADORES -->
+
+    <div class="resumo">
+
+
+        <div
+            id="cardFaltam"
+            class="resumo-card faltam ativo"
+        >
+
+            <div class="resumo-info">
+
+                <small>
+                    Faltam entrar
+                </small>
+
+                <strong id="quantidadeFaltam">
+                    0
+                </strong>
+
+            </div>
+
+            <div class="resumo-icone">
+                👥
+            </div>
+
+        </div>
+
+
+        <div
+            id="cardEntraram"
+            class="resumo-card entraram"
+        >
+
+            <div class="resumo-info">
+
+                <small>
+                    Já entraram
+                </small>
+
+                <strong id="quantidadeEntraram">
+                    0
+                </strong>
+
+            </div>
+
+            <div class="resumo-icone">
+                ✓
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ADICIONAR -->
+
+    <div class="area-adicionar">
+
+        <button
+            id="abrirCadastro"
+            class="botao-adicionar"
+        >
+
+            <span class="adicionar-icone">
+                +
+            </span>
+
+            Adicionar novo convidado
+
+        </button>
+
+    </div>
+
+
+    <!-- LISTA -->
+
+    <section class="lista-container">
+
+        <div
+            id="lista"
+            class="lista-scroll"
+        >
+        </div>
+
+    </section>
+
+
+    <footer class="rodape">
+
+        <span id="resultadoTexto">
+            Carregando convidados...
+        </span>
+
+
+        <a
+            href="/exportar"
+            class="relatorio"
+        >
+            ⬇ Baixar relatório (.txt)
+        </a>
+
+    </footer>
+
+</main>
+
+
+<!-- =====================================================
+     MODAL CADASTRO
+===================================================== -->
+
+<div
+    id="modalCadastro"
+    class="modal-fundo"
+>
+
+    <div class="modal">
+
+
+        <div class="modal-icone azul">
+            +
+        </div>
+
+
+        <h2>
+            Adicionar convidado
+        </h2>
+
+
+        <p class="modal-descricao">
+            Digite o nome completo e o CPF. Depois de salvar,
+            a pessoa aparecerá automaticamente na lista de
+            quem ainda não entrou.
+        </p>
+
+
+        <form id="formCadastro">
+
+
+            <div class="campo">
+
+                <label for="novoNome">
+                    Nome completo
+                </label>
+
+                <input
+                    id="novoNome"
+                    type="text"
+                    placeholder="Ex: João da Silva"
+                    autocomplete="off"
+                    required
+                >
+
+            </div>
+
+
+            <div class="campo">
+
+                <label for="novoCpf">
+                    CPF
+                </label>
+
+                <input
+                    id="novoCpf"
+                    type="text"
+                    placeholder="000.000.000-00"
+                    maxlength="14"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    required
+                >
+
+            </div>
+
+
+            <div class="modal-botoes">
+
+                <button
+                    type="button"
+                    id="cancelarCadastro"
+                    class="botao cancelar"
+                >
+                    Cancelar
+                </button>
+
+
+                <button
+                    type="submit"
+                    id="salvarCadastro"
+                    class="botao botao-entrada"
+                >
+                    Salvar convidado
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     MODAL DESFAZER
+===================================================== -->
+
+<div
+    id="modalDesfazer"
+    class="modal-fundo"
+>
+
+    <div class="modal">
+
+
+        <div class="modal-icone">
+            !
+        </div>
+
+
+        <h2>
+            Desfazer entrada?
+        </h2>
+
+
+        <p class="modal-descricao">
+            Essa pessoa voltará para a lista de quem ainda
+            não entrou. Confirme somente se a entrada tiver
+            sido marcada por engano.
+        </p>
+
+
+        <div class="modal-pessoa">
+
+            <strong id="modalNome"></strong>
+
+            <span id="modalCpf"></span>
+
+        </div>
+
+
+        <div class="modal-botoes">
+
+            <button
+                id="cancelarDesfazer"
+                class="botao cancelar"
+            >
+                Cancelar
+            </button>
+
+
+            <button
+                id="confirmarDesfazer"
+                class="botao confirmar"
+            >
+                Sim, desfazer
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- NOTIFICAÇÕES -->
+
+<div id="toasts"></div>
+
+
+<script>
+
+"use strict";
+
+
+// =====================================================
+// VARIÁVEIS
+// =====================================================
+
+let visitantes = [];
+
+let abaAtual =
+    "não entrou";
+
+let pessoaParaDesfazer =
+    null;
+
+
+// =====================================================
+// ELEMENTOS
+// =====================================================
+
+const lista =
+    document.getElementById("lista");
+
+const busca =
+    document.getElementById("busca");
+
+const quantidadeFaltam =
+    document.getElementById("quantidadeFaltam");
+
+const quantidadeEntraram =
+    document.getElementById("quantidadeEntraram");
+
+const resultadoTexto =
+    document.getElementById("resultadoTexto");
+
+const cardFaltam =
+    document.getElementById("cardFaltam");
+
+const cardEntraram =
+    document.getElementById("cardEntraram");
+
+const conexao =
+    document.getElementById("conexao");
+
+const textoConexao =
+    document.getElementById("textoConexao");
+
+
+// CADASTRO
+
+const abrirCadastro =
+    document.getElementById("abrirCadastro");
+
+const modalCadastro =
+    document.getElementById("modalCadastro");
+
+const formCadastro =
+    document.getElementById("formCadastro");
+
+const novoNome =
+    document.getElementById("novoNome");
+
+const novoCpf =
+    document.getElementById("novoCpf");
+
+const cancelarCadastro =
+    document.getElementById("cancelarCadastro");
+
+const salvarCadastro =
+    document.getElementById("salvarCadastro");
+
+
+// DESFAZER
+
+const modalDesfazer =
+    document.getElementById("modalDesfazer");
+
+const modalNome =
+    document.getElementById("modalNome");
+
+const modalCpf =
+    document.getElementById("modalCpf");
+
+const cancelarDesfazer =
+    document.getElementById("cancelarDesfazer");
+
+const confirmarDesfazer =
+    document.getElementById("confirmarDesfazer");
+
+
+// =====================================================
+// NORMALIZAÇÃO
+//
+// JOÃO
+// João
+// joao
+// JOAO
+//
+// tudo encontra a mesma pessoa.
+// =====================================================
+
+function normalizarTexto(valor) {
+
+    return String(valor || "")
+
+        .normalize("NFD")
+
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        )
+
+        .toLowerCase()
+
+        .trim()
+
+        .replace(
+            /\s+/g,
+            " "
+        );
+
+}
+
+
+function somenteNumeros(valor) {
+
+    return String(valor || "")
+        .replace(/\D/g, "");
+
+}
+
+
+// =====================================================
+// CPF
+// =====================================================
+
+function formatarCPF(valor) {
+
+    const cpf =
+        somenteNumeros(valor);
+
+
+    if (cpf.length !== 11) {
+
+        return valor;
+
+    }
+
+
+    return (
+        cpf.slice(0,3) +
+        "." +
+        cpf.slice(3,6) +
+        "." +
+        cpf.slice(6,9) +
+        "-" +
+        cpf.slice(9)
+    );
+
+}
+
+
+// =====================================================
+// DATA
+// =====================================================
+
+function formatarHorario(valor) {
+
+    if (!valor) {
+
+        return "";
+
+    }
+
+
+    const data =
+        new Date(valor);
+
+
+    if (
+        Number.isNaN(
+            data.getTime()
+        )
+    ) {
+
+        return "";
+
+    }
+
+
+    return data.toLocaleString(
+        "pt-BR",
+        {
+
+            day:
+                "2-digit",
+
+            month:
+                "2-digit",
+
+            hour:
+                "2-digit",
+
+            minute:
+                "2-digit",
+
+            second:
+                "2-digit"
+
+        }
+    );
+
+}
+
+
+// =====================================================
+// NOTIFICAÇÃO
+// =====================================================
+
+function toast(
+    mensagem,
+    tipo = ""
+) {
+
+    const area =
+        document.getElementById(
+            "toasts"
+        );
+
+
+    const item =
+        document.createElement(
+            "div"
+        );
+
+
+    item.className =
+        `toast ${tipo}`;
+
+
+    item.textContent =
+        mensagem;
+
+
+    area.appendChild(
+        item
+    );
+
+
+    setTimeout(
+        () => item.remove(),
+        2700
+    );
+
+}
+
+
+// =====================================================
+// CARREGAR LISTA
+// =====================================================
+
+async function carregarVisitantes(
+    silencioso = false
+) {
+
+    try {
+
+        const resposta =
+            await fetch(
+                "/api/visitantes",
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+
+        if (!resposta.ok) {
+
+            throw new Error(
+                "Erro ao carregar convidados."
+            );
+
+        }
+
+
+        visitantes =
+            await resposta.json();
+
+
+        atualizarTela();
+
+    }
+
+    catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        if (!silencioso) {
+
+            toast(
+                "Não foi possível carregar a lista.",
+                "erro"
+            );
+
+        }
+
+    }
+
+}
+
+
+// =====================================================
+// CONTADORES
+// =====================================================
+
+function atualizarContadores() {
+
+    const entraram =
+        visitantes.filter(
+            pessoa =>
+                pessoa.status ===
+                "entrou"
+        ).length;
+
+
+    const faltam =
+        visitantes.length -
+        entraram;
+
+
+    quantidadeEntraram.textContent =
+        entraram;
+
+
+    quantidadeFaltam.textContent =
+        faltam;
+
+}
+
+
+// =====================================================
+// FILTRO
+// =====================================================
+
+function obterPessoas() {
+
+    const digitado =
+        busca.value;
+
+
+    const termoNome =
+        normalizarTexto(
+            digitado
+        );
+
+
+    const termoCPF =
+        somenteNumeros(
+            digitado
+        );
+
+
+    return visitantes
+
+        .filter(
+            pessoa => {
+
+
+                // FILTRA PELA ABA
+
+                if (
+                    abaAtual ===
+                    "entrou"
+                ) {
+
+                    if (
+                        pessoa.status !==
+                        "entrou"
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+                else {
+
+                    if (
+                        pessoa.status ===
+                        "entrou"
+                    ) {
+
+                        return false;
+
+                    }
+
+                }
+
+
+                // SEM PESQUISA
+
+                if (
+                    !termoNome &&
+                    !termoCPF
+                ) {
+
+                    return true;
+
+                }
+
+
+                const nome =
+                    normalizarTexto(
+                        pessoa.nome
+                    );
+
+
+                const cpf =
+                    somenteNumeros(
+                        pessoa.cpf
+                    );
+
+
+                return (
+
+                    nome.includes(
+                        termoNome
+                    )
+
+                    ||
+
+                    (
+                        termoCPF &&
+                        cpf.includes(
+                            termoCPF
+                        )
+                    )
+
+                );
+
+            }
+        )
+
+
+        .sort(
+            (a,b) => {
+
+
+                // QUEM ENTROU:
+                // mais recente em cima
+
+                if (
+                    abaAtual ===
+                    "entrou"
+                ) {
+
+                    return (
+
+                        new Date(
+                            b.entradaEm || 0
+                        )
+
+                        -
+
+                        new Date(
+                            a.entradaEm || 0
+                        )
+
+                    );
+
+                }
+
+
+                // QUEM FALTA:
+                // ordem alfabética
+
+                return String(a.nome)
+                    .localeCompare(
+                        String(b.nome),
+                        "pt-BR"
+                    );
+
+            }
+        );
+
+}
+
+
+// =====================================================
+// TELA
+// =====================================================
+
+function atualizarTela() {
+
+    atualizarContadores();
+
+    renderizarLista();
+
+}
+
+
+// =====================================================
+// LISTA
+// =====================================================
+
+function renderizarLista() {
+
+    const pessoas =
+        obterPessoas();
+
+
+    lista.innerHTML =
+        "";
+
+
+    if (
+        pessoas.length === 0
+    ) {
+
+        lista.innerHTML = `
+
+            <div class="vazio">
+
+                <div class="vazio-icone">
+                    🔎
+                </div>
+
+                <strong>
+                    Nenhum convidado encontrado
+                </strong>
+
+                <span>
+                    Confira o nome ou CPF pesquisado.
+                </span>
+
+            </div>
+
+        `;
+
+
+        resultadoTexto.textContent =
+            "Nenhum resultado";
+
+
+        return;
+
+    }
+
+
+    const fragmento =
+        document.createDocumentFragment();
+
+
+    pessoas.forEach(
+        pessoa => {
+
+
+            const linha =
+                document.createElement(
+                    "div"
+                );
+
+
+            linha.className =
+                "pessoa";
+
+
+            if (
+                pessoa.status ===
+                "entrou"
+            ) {
+
+                linha.classList.add(
+                    "entrou"
+                );
+
+            }
+
+
+            // ===========================
+            // NOME E CPF
+            // ===========================
+
+            const dados =
+                document.createElement(
+                    "div"
+                );
+
+
+            const nome =
+                document.createElement(
+                    "div"
+                );
+
+
+            nome.className =
+                "nome";
+
+
+            nome.textContent =
+                pessoa.nome;
+
+
+            const cpf =
+                document.createElement(
+                    "div"
+                );
+
+
+            cpf.className =
+                "cpf";
+
+
+            cpf.textContent =
+                formatarCPF(
+                    pessoa.cpf
+                );
+
+
+            dados.appendChild(
+                nome
+            );
+
+
+            dados.appendChild(
+                cpf
+            );
+
+
+            linha.appendChild(
+                dados
+            );
+
+
+            // ===========================
+            // STATUS
+            // ===========================
+
+            const status =
+                document.createElement(
+                    "div"
+                );
+
+
+            status.className =
+                "status-info";
+
+
+            if (
+                pessoa.status ===
+                "entrou"
+            ) {
+
+                const titulo =
+                    document.createElement(
+                        "strong"
+                    );
+
+
+                titulo.textContent =
+                    "Entrada registrada";
+
+
+                status.appendChild(
+                    titulo
+                );
+
+
+                status.appendChild(
+                    document.createTextNode(
+                        formatarHorario(
+                            pessoa.entradaEm
+                        )
+                    )
+                );
+
+            }
+
+            else {
+
+                const titulo =
+                    document.createElement(
+                        "strong"
+                    );
+
+
+                titulo.textContent =
+                    "Aguardando entrada";
+
+
+                status.appendChild(
+                    titulo
+                );
+
+
+                status.appendChild(
+                    document.createTextNode(
+                        "Ainda não entrou"
+                    )
+                );
+
+            }
+
+
+            linha.appendChild(
+                status
+            );
+
+
+            // ===========================
+            // BOTÃO
+            // ===========================
+
+            const botao =
+                document.createElement(
+                    "button"
+                );
+
+
+            botao.className =
+                "botao";
+
+
+            if (
+                pessoa.status ===
+                "entrou"
+            ) {
+
+                botao.classList.add(
+                    "botao-desfazer"
+                );
+
+
+                botao.textContent =
+                    "Desfazer";
+
+
+                botao.onclick =
+                    () => {
+
+                        abrirDesfazer(
+                            pessoa
+                        );
+
+                    };
+
+            }
+
+            else {
+
+                botao.classList.add(
+                    "botao-entrada"
+                );
+
+
+                botao.textContent =
+                    "Marcar entrada";
+
+
+                botao.onclick =
+                    () => {
+
+                        marcarEntrada(
+                            pessoa,
+                            botao
+                        );
+
+                    };
+
+            }
+
+
+            linha.appendChild(
+                botao
+            );
+
+
+            fragmento.appendChild(
+                linha
+            );
+
+        }
+    );
+
+
+    lista.appendChild(
+        fragmento
+    );
+
+
+    resultadoTexto.textContent =
+        `${pessoas.length} ${
+            pessoas.length === 1
+                ? "pessoa exibida"
+                : "pessoas exibidas"
+        }`;
+
+}
+
+
+// =====================================================
+// TROCAR ENTRE LISTAS
+// =====================================================
+
+function mostrarFaltam() {
+
+    abaAtual =
+        "não entrou";
+
+
+    cardFaltam.classList.add(
+        "ativo"
+    );
+
+
+    cardEntraram.classList.remove(
+        "ativo"
+    );
+
+
+    renderizarLista();
+
+}
+
+
+function mostrarEntraram() {
+
+    abaAtual =
+        "entrou";
+
+
+    cardEntraram.classList.add(
+        "ativo"
+    );
+
+
+    cardFaltam.classList.remove(
+        "ativo"
+    );
+
+
+    renderizarLista();
+
+}
+
+
+cardFaltam.addEventListener(
+    "click",
+    mostrarFaltam
+);
+
+
+cardEntraram.addEventListener(
+    "click",
+    mostrarEntraram
+);
+
+
+// =====================================================
+// BUSCA
+// =====================================================
+
+busca.addEventListener(
+    "input",
+    renderizarLista
+);
+
+
+// =====================================================
+// MARCAR ENTRADA
+// =====================================================
+
+async function marcarEntrada(
+    pessoa,
+    botao
+) {
+
+    if (
+        botao.disabled
+    ) {
+
+        return;
+
+    }
+
+
+    botao.disabled =
+        true;
+
+
+    botao.textContent =
+        "Salvando...";
+
+
+    try {
+
+        const resposta =
+            await fetch(
+                `/api/visitantes/${encodeURIComponent(
+                    pessoa.id
+                )}/status`,
+                {
+
+                    method:
+                        "PATCH",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+                            status:
+                                "entrou"
+                        })
+
+                }
+            );
+
+
+        const dados =
+            await resposta.json();
+
+
+        if (!resposta.ok) {
+
+            throw new Error(
+                dados.erro ||
+                "Não foi possível registrar a entrada."
+            );
+
+        }
+
+
+        const indice =
+            visitantes.findIndex(
+                item =>
+                    String(item.id) ===
+                    String(pessoa.id)
+            );
+
+
+        if (
+            indice !== -1
+        ) {
+
+            visitantes[indice] =
+                dados;
+
+        }
+
+
+        atualizarTela();
+
+
+        toast(
+            `${dados.nome} entrou.`,
+            "sucesso"
+        );
+
+    }
+
+    catch (erro) {
+
+        botao.disabled =
+            false;
+
+
+        botao.textContent =
+            "Marcar entrada";
+
+
+        toast(
+            erro.message,
+            "erro"
+        );
+
+    }
+
+}
+
+
+// =====================================================
+// CADASTRO
+// =====================================================
+
+abrirCadastro.addEventListener(
+    "click",
+    () => {
+
+        modalCadastro.classList.add(
+            "aberto"
+        );
+
+
+        setTimeout(
+            () =>
+                novoNome.focus(),
+            40
+        );
+
+    }
+);
+
+
+function fecharCadastro() {
+
+    modalCadastro.classList.remove(
+        "aberto"
+    );
+
+
+    formCadastro.reset();
+
+}
+
+
+cancelarCadastro.addEventListener(
+    "click",
+    fecharCadastro
+);
+
+
+modalCadastro.addEventListener(
+    "click",
+    evento => {
+
+        if (
+            evento.target ===
+            modalCadastro
+        ) {
+
+            fecharCadastro();
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// FORMATA CPF ENQUANTO DIGITA
+// =====================================================
+
+novoCpf.addEventListener(
+    "input",
+    () => {
+
+
+        let cpf =
+            somenteNumeros(
+                novoCpf.value
+            )
+            .slice(
+                0,
+                11
+            );
+
+
+        if (
+            cpf.length > 9
+        ) {
+
+            cpf =
+                cpf.replace(
+                    /(\d{3})(\d{3})(\d{3})(\d{1,2})/,
+                    "$1.$2.$3-$4"
+                );
+
+        }
+
+        else if (
+            cpf.length > 6
+        ) {
+
+            cpf =
+                cpf.replace(
+                    /(\d{3})(\d{3})(\d+)/,
+                    "$1.$2.$3"
+                );
+
+        }
+
+        else if (
+            cpf.length > 3
+        ) {
+
+            cpf =
+                cpf.replace(
+                    /(\d{3})(\d+)/,
+                    "$1.$2"
+                );
+
+        }
+
+
+        novoCpf.value =
+            cpf;
+
+    }
+);
+
+
+// =====================================================
+// SALVAR NOVO CONVIDADO
+// =====================================================
+
+formCadastro.addEventListener(
+    "submit",
+    async evento => {
+
+
+        evento.preventDefault();
+
+
+        const nome =
+            novoNome.value.trim();
+
+
+        const cpf =
+            somenteNumeros(
+                novoCpf.value
+            );
+
+
+        if (!nome) {
+
+            toast(
+                "Digite o nome do convidado.",
+                "erro"
+            );
+
+            return;
+
+        }
+
+
+        if (
+            cpf.length !== 11
+        ) {
+
+            toast(
+                "O CPF precisa ter 11 números.",
+                "erro"
+            );
+
+            return;
+
+        }
+
+
+        salvarCadastro.disabled =
+            true;
+
+
+        salvarCadastro.textContent =
+            "Salvando...";
+
+
+        try {
+
+            const resposta =
+                await fetch(
+                    "/api/visitantes",
+                    {
+
+                        method:
+                            "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                        body:
+                            JSON.stringify({
+                                nome,
+                                cpf
+                            })
+
+                    }
+                );
+
+
+            const dados =
+                await resposta.json();
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    dados.erro ||
+                    "Não foi possível adicionar."
+                );
+
+            }
+
+
+            visitantes.push(
+                dados
+            );
+
+
+            busca.value =
+                "";
+
+
+            fecharCadastro();
+
+
+            mostrarFaltam();
+
+
+            atualizarTela();
+
+
+            toast(
+                `${dados.nome} foi adicionado.`,
+                "sucesso"
+            );
+
+        }
+
+        catch (erro) {
+
+            toast(
+                erro.message,
+                "erro"
+            );
+
+        }
+
+        finally {
+
+            salvarCadastro.disabled =
+                false;
+
+
+            salvarCadastro.textContent =
+                "Salvar convidado";
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// DESFAZER
+// =====================================================
+
+function abrirDesfazer(
+    pessoa
+) {
+
+    pessoaParaDesfazer =
+        pessoa;
+
+
+    modalNome.textContent =
+        pessoa.nome;
+
+
+    modalCpf.textContent =
+        formatarCPF(
+            pessoa.cpf
+        );
+
+
+    modalDesfazer.classList.add(
+        "aberto"
+    );
+
+}
+
+
+function fecharDesfazer() {
+
+    modalDesfazer.classList.remove(
+        "aberto"
+    );
+
+
+    pessoaParaDesfazer =
+        null;
+
+}
+
+
+cancelarDesfazer.addEventListener(
+    "click",
+    fecharDesfazer
+);
+
+
+modalDesfazer.addEventListener(
+    "click",
+    evento => {
+
+        if (
+            evento.target ===
+            modalDesfazer
+        ) {
+
+            fecharDesfazer();
+
+        }
+
+    }
+);
+
+
+confirmarDesfazer.addEventListener(
+    "click",
+    async () => {
+
+
+        if (
+            !pessoaParaDesfazer
+        ) {
+
+            return;
+
+        }
+
+
+        const pessoa =
+            pessoaParaDesfazer;
+
+
+        confirmarDesfazer.disabled =
+            true;
+
+
+        confirmarDesfazer.textContent =
+            "Desfazendo...";
+
+
+        try {
+
+            const resposta =
+                await fetch(
+                    `/api/visitantes/${encodeURIComponent(
+                        pessoa.id
+                    )}/status`,
+                    {
+
+                        method:
+                            "PATCH",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                        body:
+                            JSON.stringify({
+                                status:
+                                    "não entrou"
+                            })
+
+                    }
+                );
+
+
+            const dados =
+                await resposta.json();
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    dados.erro ||
+                    "Não foi possível desfazer."
+                );
+
+            }
+
+
+            const indice =
+                visitantes.findIndex(
+                    item =>
+                        String(item.id) ===
+                        String(pessoa.id)
+                );
+
+
+            if (
+                indice !== -1
+            ) {
+
+                visitantes[indice] =
+                    dados;
+
+            }
+
+
+            fecharDesfazer();
+
+
+            atualizarTela();
+
+
+            toast(
+                `Entrada de ${pessoa.nome} desfeita.`
+            );
+
+        }
+
+        catch (erro) {
+
+            toast(
+                erro.message,
+                "erro"
+            );
+
+        }
+
+        finally {
+
+            confirmarDesfazer.disabled =
+                false;
+
+
+            confirmarDesfazer.textContent =
+                "Sim, desfazer";
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// ESC FECHA MODAIS
+// =====================================================
+
+document.addEventListener(
+    "keydown",
+    evento => {
+
+        if (
+            evento.key ===
+            "Escape"
+        ) {
+
+            fecharCadastro();
+
+            fecharDesfazer();
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// SINCRONIZAÇÃO ENTRE OS COMPUTADORES
+// =====================================================
+
+function iniciarSincronizacao() {
+
+    if (
+        !window.EventSource
+    ) {
+
+        textoConexao.textContent =
+            "Atualização automática";
+
+
+        return;
+
+    }
+
+
+    const eventos =
+        new EventSource(
+            "/api/eventos"
+        );
+
+
+    eventos.onopen =
+        () => {
+
+            conexao.classList.add(
+                "online"
+            );
+
+
+            textoConexao.textContent =
+                "Sincronizado";
+
+        };
+
+
+    eventos.onmessage =
+        evento => {
+
+            try {
+
+                const dados =
+                    JSON.parse(
+                        evento.data
+                    );
+
+
+                if (
+                    dados.tipo ===
+                    "atualizacao"
+                ) {
+
+                    carregarVisitantes(
+                        true
+                    );
+
+                }
+
+            }
+
+            catch (erro) {
+
+                console.error(
+                    erro
+                );
+
+            }
+
+        };
+
+
+    eventos.onerror =
+        () => {
+
+            conexao.classList.remove(
+                "online"
+            );
+
+
+            textoConexao.textContent =
+                "Reconectando...";
+
+        };
+
+}
+
+
+// =====================================================
+// SEGURANÇA EXTRA
+//
+// MESMO SE SSE FALHAR,
+// ATUALIZA A CADA 15 SEGUNDOS.
+// =====================================================
+
+setInterval(
+    () => {
+
+        carregarVisitantes(
+            true
+        );
+
+    },
+    15000
+);
+
+
+// =====================================================
+// INÍCIO
+// =====================================================
+
+carregarVisitantes();
+
+iniciarSincronizacao();
+
+</script>
+
+</body>
+
+</html>
