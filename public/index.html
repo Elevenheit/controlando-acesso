@@ -203,40 +203,14 @@ input {
 
 
 .marca-icone {
+    overflow: hidden;
+}
 
-    position: relative;
-
-    flex: 0 0 auto;
-
-    width: 64px;
-    height: 64px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius:
-        23px 23px 29px 29px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #FFFFFF,
-            #E9F9FF
-        );
-
-    color:
-        var(--smurf-2);
-
-    font-size: 31px;
-    font-weight: 900;
-
-    transform:
-        rotate(-3deg);
-
-    box-shadow:
-        0 10px 26px rgba(4, 78, 120, .22);
+.marca-icone img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 
@@ -3249,7 +3223,7 @@ body {
 
 
             <div class="marca-icone">
-                ✓
+            <img src="/papai-smurf.png" alt="Papai Smurf">
             </div>
 
 
