@@ -12,6 +12,8 @@
 
 <title>Controle de Acesso</title>
 
+<style>
+
 /* =====================================================
    CORES
 ===================================================== */
@@ -2664,8 +2666,8 @@ and (
     margin: 0;
     overflow: hidden;
     color: #0B648F;
-    font-size: clamp(18px, 1.7vw, 25px);
-    font-weight: 950;
+    font-size: clamp(14px, 1.15vw, 18px);
+    font-weight: 900;
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2676,7 +2678,7 @@ and (
     overflow: hidden;
     color: var(--texto-secundario);
     font-size: 11px;
-    font-weight: 750;
+    font-weight: 650;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -4331,7 +4333,7 @@ function renderizarLista() {
                 </strong>
 
                 <span>
-                    Confira o nome da pessoa ou do responsável pesquisado.
+                    Confira o nome da pessoa ou o nome da família pesquisada.
                 </span>
 
             </div>
@@ -4429,9 +4431,9 @@ function renderizarLista() {
 
             }
 
-            return String(a.responsavel)
+            return String(a.familia)
                 .localeCompare(
-                    String(b.responsavel),
+                    String(b.familia),
                     "pt-BR"
                 );
 
@@ -4551,7 +4553,7 @@ function renderizarLista() {
                 "familia-icone";
 
             icone.textContent =
-                "👤";
+                "👨‍👩‍👧";
 
 
             const tituloArea =
@@ -4571,10 +4573,8 @@ function renderizarLista() {
             titulo.className =
                 "familia-titulo";
 
-            // O responsável é a referência principal do cartão.
-            // O nome da família continua existindo internamente apenas para agrupamento e busca.
             titulo.textContent =
-                grupo.responsavel;
+                grupo.familia;
 
 
             const responsavel =
@@ -4586,11 +4586,7 @@ function renderizarLista() {
                 "familia-responsavel";
 
             responsavel.textContent =
-                `${todosDaFamilia.length} ${
-                    todosDaFamilia.length === 1
-                        ? "integrante"
-                        : "integrantes"
-                } • clique para ver quem é quem`;
+                `Responsável: ${grupo.responsavel}`;
 
 
             const resumo =
@@ -4925,29 +4921,17 @@ function renderizarLista() {
                                 "span"
                             );
 
-                        const ehResponsavel =
-                            normalizarTexto(
-                                pessoa.nome
-                            ) ===
-                            normalizarTexto(
-                                grupo.responsavel
-                            );
-
                         tipo.className =
-                            ehResponsavel
-                                ? "responsavel-pill"
-                                : `tipo-pill ${
-                                    pessoa.tipo === "crianca"
-                                        ? "crianca"
-                                        : "adulto"
-                                }`;
+                            `tipo-pill ${
+                                pessoa.tipo === "crianca"
+                                    ? "crianca"
+                                    : "adulto"
+                            }`;
 
                         tipo.textContent =
-                            ehResponsavel
-                                ? "Responsável"
-                                : pessoa.tipo === "crianca"
-                                    ? "Filho(a) / Criança"
-                                    : "Integrante adulto";
+                            pessoa.tipo === "crianca"
+                                ? "Criança"
+                                : "Adulto";
 
 
                         topo.appendChild(
@@ -4959,7 +4943,31 @@ function renderizarLista() {
                         );
 
 
+                        if (
+                            normalizarTexto(
+                                pessoa.nome
+                            ) ===
+                            normalizarTexto(
+                                grupo.responsavel
+                            )
+                        ) {
 
+                            const principal =
+                                document.createElement(
+                                    "span"
+                                );
+
+                            principal.className =
+                                "responsavel-pill";
+
+                            principal.textContent =
+                                "Responsável";
+
+                            topo.appendChild(
+                                principal
+                            );
+
+                        }
 
 
                         const subtexto =
@@ -5194,8 +5202,8 @@ function renderizarLista() {
     resultadoTexto.textContent =
         `${grupos.length} ${
             grupos.length === 1
-                ? "responsável"
-                : "responsáveis"
+                ? "família"
+                : "famílias"
         } • ${pessoas.length} ${
             pessoas.length === 1
                 ? "pessoa"
@@ -6543,9 +6551,11 @@ setInterval(
 );
 
 
+
 // =====================================================
 // INÍCIO
 // =====================================================
+
 
 carregarVisitantes();
 
