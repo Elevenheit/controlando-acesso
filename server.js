@@ -25,7 +25,17 @@ const pool = new Pool({
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "1mb" }));
+const VERSAO_INTERFACE = "3";
+app.use((req, res, next) => {
+    res.setHeader("Cache-Control", "no-store");
+    if (req.path.startsWith("/api/") && !["GET", "HEAD", "OPTIONS"].includes(req.method)
+        && req.get("X-Controle-Versao") !== VERSAO_INTERFACE) {
+        return res.status(409).json({ codigo: "ATUALIZACAO_NECESSARIA", erro: "O sistema foi atualizado. Aperte Ctrl + F5 antes de continuar." });
+    }
+    next();
+});
 app.use(express.static(PUBLIC_DIR, { etag: false, maxAge: 0 }));
+app.get("/api/versao", (req, res) => res.json({ versao: VERSAO_INTERFACE }));
 
 // ======================================================
 // NOMES, TIPOS E IDENTIFICADORES
@@ -121,7 +131,13 @@ function linhaParaVisitante(row) {
         responsavel: row.responsavel || row.nome,
         tipo: limparTipo(row.tipo),
         familiaCodigo: row.familia_codigo || `FAM-${row.id}`,
-        status: row.entrou ? "entrou" : "não entrou",
+        status: row.entrou ? "entrou" : row.nao_veio ? "nao_veio" : "não entrou",
+        criadoEm: row.criado_em ? new Date(row.criado_em).toISOString() : null,
+        adicionadoEm: row.cadastrado_pelo_site_em ? new Date(row.cadastrado_pelo_site_em).toISOString() : null,
+        versao: crypto.createHash("sha256").update(JSON.stringify([
+            String(row.id), row.nome, row.familia, row.responsavel, row.tipo,
+            row.entrou, Boolean(row.nao_veio), row.timestamp_entrada, row.excluido_em
+        ])).digest("hex"),
         entradaEm: row.timestamp_entrada
             ? new Date(row.timestamp_entrada).toISOString()
             : null
@@ -133,7 +149,12 @@ function linhaParaVisitante(row) {
 // ======================================================
 
 async function iniciarBanco() {
-    await pool.query(`
+    const client = await pool.connect();
+    try {
+    await client.query("BEGIN");
+    await client.query("SET LOCAL lock_timeout = '5s'");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext('controle-acesso-migracao-v3'))");
+    await client.query(`
         CREATE TABLE IF NOT EXISTS pessoas (
             id BIGSERIAL PRIMARY KEY,
             nome VARCHAR(120) NOT NULL,
@@ -151,36 +172,40 @@ async function iniciarBanco() {
         )
     `);
 
-    await pool.query(`
+    await client.query(`
         ALTER TABLE pessoas
             ADD COLUMN IF NOT EXISTS familia VARCHAR(120) NOT NULL DEFAULT '',
             ADD COLUMN IF NOT EXISTS responsavel VARCHAR(120) NOT NULL DEFAULT '',
             ADD COLUMN IF NOT EXISTS tipo VARCHAR(20) NOT NULL DEFAULT 'adulto',
             ADD COLUMN IF NOT EXISTS codigo VARCHAR(32) NULL,
-            ADD COLUMN IF NOT EXISTS familia_codigo VARCHAR(32) NULL
+            ADD COLUMN IF NOT EXISTS familia_codigo VARCHAR(32) NULL,
+            ADD COLUMN IF NOT EXISTS nao_veio BOOLEAN NOT NULL DEFAULT FALSE,
+            ADD COLUMN IF NOT EXISTS excluido_em TIMESTAMPTZ NULL,
+            ADD COLUMN IF NOT EXISTS cadastrado_pelo_site_em TIMESTAMPTZ NULL,
+            ADD COLUMN IF NOT EXISTS criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
     `);
 
     // "adolescente" tem 11 letras; amplia a coluna antiga sem apagar cadastros.
-    await pool.query("ALTER TABLE pessoas ALTER COLUMN tipo TYPE VARCHAR(20)");
+    await client.query("ALTER TABLE pessoas ALTER COLUMN tipo TYPE VARCHAR(20)");
 
     // Compatibilidade: conserva valores antigos, mas CPF deixa de ser exigido.
-    await pool.query("ALTER TABLE pessoas ALTER COLUMN cpf DROP NOT NULL");
+    await client.query("ALTER TABLE pessoas ALTER COLUMN cpf DROP NOT NULL");
 
-    await pool.query("CREATE SEQUENCE IF NOT EXISTS pessoas_id_seq");
-    await pool.query(`
+    await client.query("CREATE SEQUENCE IF NOT EXISTS pessoas_id_seq");
+    await client.query(`
         SELECT setval(
             'pessoas_id_seq',
-            GREATEST(COALESCE(MAX(id), 0), 1),
-            COALESCE(MAX(id), 0) > 0
+            GREATEST(COALESCE(MAX(id), 0), (SELECT last_value FROM pessoas_id_seq), 1),
+            TRUE
         )
         FROM pessoas
     `);
-    await pool.query(`
+    await client.query(`
         ALTER TABLE pessoas
         ALTER COLUMN id SET DEFAULT nextval('pessoas_id_seq')
     `);
 
-    await pool.query(`
+    await client.query(`
         UPDATE pessoas
         SET
             familia = CASE WHEN BTRIM(familia) = '' THEN nome ELSE familia END,
@@ -200,21 +225,28 @@ async function iniciarBanco() {
             )
     `);
 
-    await pool.query(
+    await client.query(
         "CREATE INDEX IF NOT EXISTS pessoas_nome_idx ON pessoas (nome)"
     );
-    await pool.query(
+    await client.query(
         "CREATE INDEX IF NOT EXISTS pessoas_familia_idx ON pessoas (familia)"
     );
-    await pool.query(
+    await client.query(
         "CREATE INDEX IF NOT EXISTS pessoas_tipo_idx ON pessoas (tipo)"
     );
-    await pool.query(`
+    await client.query(`
         CREATE UNIQUE INDEX IF NOT EXISTS pessoas_codigo_uidx
         ON pessoas (codigo)
         WHERE codigo IS NOT NULL
     `);
 
+    await client.query("COMMIT");
+    } catch (erro) {
+        await client.query("ROLLBACK").catch(() => {});
+        throw erro;
+    } finally {
+        client.release();
+    }
     await importarVisitantesLegadosSeNecessario();
 }
 
@@ -364,7 +396,7 @@ function avisarTodos() {
 app.get("/api/visitantes", async (req, res) => {
     try {
         const { rows } = await pool.query(`
-            SELECT * FROM pessoas
+            SELECT * FROM pessoas WHERE excluido_em IS NULL
             ORDER BY familia ASC, nome ASC, id ASC
         `);
         res.setHeader("Cache-Control", "no-store");
@@ -379,21 +411,26 @@ app.get("/api/visitantes", async (req, res) => {
 // CADASTRO DE FAMÍLIA E INTEGRANTES
 // ======================================================
 
-function validarCadastroFamilia(corpo) {
+function validarCadastroFamilia(corpo, permitirVazia = false) {
     const responsavel = limparTexto(corpo.responsavel);
     const familia = limparTexto(corpo.familia) || responsavel;
     const recebidos = Array.isArray(corpo.integrantes) ? corpo.integrantes : [];
     if (recebidos.some(item => !["adulto", "crianca", "adolescente"].includes(normalizarTexto(item?.tipo || "adulto")))) {
         return { erro: "Escolha Adulto, Criança ou Adolescente para cada integrante." };
     }
+    if (recebidos.some(item => !["entrou", "não entrou", "nao_veio"].includes(item?.status || "não entrou"))) {
+        return { erro: "Escolha uma situação válida para cada integrante." };
+    }
     const integrantes = recebidos.map(item => ({
         id: item?.id == null ? null : String(item.id),
         nome: limparTexto(item?.nome),
-        tipo: limparTipo(item?.tipo)
+        tipo: limparTipo(item?.tipo),
+        status: item?.status || "não entrou",
+        versao: String(item?.versao || "")
     }));
 
     if (!responsavel) return { erro: "Informe o nome completo do responsável." };
-    if (integrantes.length === 0) {
+    if (integrantes.length === 0 && !permitirVazia) {
         return { erro: "Adicione pelo menos um integrante." };
     }
     if (integrantes.some(item => !item.nome)) {
@@ -405,7 +442,7 @@ function validarCadastroFamilia(corpo) {
 async function detectarDuplicados(integrantes, consulta = pool, idsIgnorados = []) {
     const existentes = await consulta.query(`
         SELECT id, nome, familia, responsavel, codigo
-        FROM pessoas
+        FROM pessoas WHERE excluido_em IS NULL
         ORDER BY nome ASC
     `);
 
@@ -441,65 +478,48 @@ async function detectarDuplicados(integrantes, consulta = pool, idsIgnorados = [
     return duplicados;
 }
 
+async function inserirIntegrante(client, integrante, familia, responsavel, familiaCodigo) {
+    const momento = momentoSP();
+    const entrou = integrante.status === "entrou";
+    const { rows } = await client.query(`
+        INSERT INTO pessoas (
+            nome, familia, responsavel, tipo, codigo, familia_codigo,
+            entrou, horario, data_entrada, timestamp_entrada, nao_veio, cadastrado_pelo_site_em
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()) RETURNING *
+    `, [integrante.nome, familia, responsavel, integrante.tipo, gerarCodigo("CONV"), familiaCodigo,
+        entrou, entrou ? momento.hora : "", entrou ? momento.data : "", entrou ? momento.iso : null,
+        integrante.status === "nao_veio"]);
+    return linhaParaVisitante(rows[0]);
+}
+
 async function cadastrarFamilia(req, res) {
     const validacao = validarCadastroFamilia(req.body || {});
     if (validacao.erro) return res.status(400).json({ erro: validacao.erro });
-
+    let client;
     try {
+        client = await pool.connect();
+        await client.query("BEGIN");
+        await client.query("SELECT pg_advisory_xact_lock(hashtext('controle-acesso-cadastros'))");
         if (req.body.confirmarDuplicados !== true) {
-            const duplicados = await detectarDuplicados(validacao.integrantes);
-            if (duplicados.length > 0) {
-                return res.status(409).json({
-                    erro: "Encontramos nomes iguais ou escritos de forma parecida.",
-                    precisaConfirmacao: true,
-                    duplicados
-                });
+            const duplicados = await detectarDuplicados(validacao.integrantes, client);
+            if (duplicados.length) {
+                await client.query("ROLLBACK");
+                return res.status(409).json({ erro: "Encontramos nomes iguais ou parecidos.", precisaConfirmacao: true, duplicados });
             }
         }
-
-        const client = await pool.connect();
-        try {
-            await client.query("BEGIN");
-            const familiaCodigo = gerarCodigo("FAM");
-            const cadastrados = [];
-
-            for (const integrante of validacao.integrantes) {
-                const { rows } = await client.query(`
-                    INSERT INTO pessoas (
-                        nome, familia, responsavel, tipo, codigo, familia_codigo,
-                        entrou, horario, data_entrada, timestamp_entrada
-                    )
-                    VALUES ($1, $2, $3, $4, $5, $6, FALSE, '', '', NULL)
-                    RETURNING *
-                `, [
-                    integrante.nome,
-                    validacao.familia,
-                    validacao.responsavel,
-                    integrante.tipo,
-                    gerarCodigo("CONV"),
-                    familiaCodigo
-                ]);
-                cadastrados.push(linhaParaVisitante(rows[0]));
-            }
-
-            await client.query("COMMIT");
-            avisarTodos();
-            return res.status(201).json({
-                familia: validacao.familia,
-                responsavel: validacao.responsavel,
-                familiaCodigo,
-                visitantes: cadastrados
-            });
-        } catch (erro) {
-            await client.query("ROLLBACK");
-            throw erro;
-        } finally {
-            client.release();
+        const familiaCodigo = gerarCodigo("FAM");
+        const cadastrados = [];
+        for (const integrante of validacao.integrantes) {
+            cadastrados.push(await inserirIntegrante(client, integrante, validacao.familia, validacao.responsavel, familiaCodigo));
         }
+        await client.query("COMMIT");
+        avisarTodos();
+        return res.status(201).json({ familia: validacao.familia, responsavel: validacao.responsavel, familiaCodigo, visitantes: cadastrados });
     } catch (erro) {
+        if (client) await client.query("ROLLBACK").catch(() => {});
         console.error("Erro ao cadastrar família:", erro);
         return res.status(500).json({ erro: mensagemErroCadastro(erro) });
-    }
+    } finally { client?.release(); }
 }
 
 app.post("/api/familias", cadastrarFamilia);
@@ -522,102 +542,94 @@ function retratoFamilia(pessoas) {
     })).sort((a, b) => a.id.localeCompare(b.id)));
 }
 
+// Mantém o horário se a pessoa já está presente; alterações explícitas usam versão.
+async function gravarStatus(client, id, status) {
+    const momento = momentoSP();
+    const { rows } = await client.query(`
+        UPDATE pessoas SET
+            horario = CASE WHEN $2 THEN CASE WHEN entrou THEN horario ELSE $4 END ELSE '' END,
+            data_entrada = CASE WHEN $2 THEN CASE WHEN entrou THEN data_entrada ELSE $5 END ELSE '' END,
+            timestamp_entrada = CASE WHEN $2 THEN CASE WHEN entrou THEN timestamp_entrada ELSE $6::timestamptz END ELSE NULL END,
+            entrou = $2, nao_veio = $3
+        WHERE id::text = $1 AND excluido_em IS NULL RETURNING *
+    `, [String(id), status === "entrou", status === "nao_veio", momento.hora, momento.data, momento.iso]);
+    return rows[0] ? linhaParaVisitante(rows[0]) : null;
+}
+
 app.patch("/api/familias/:familiaCodigo", async (req, res) => {
     const corpo = req.body || {};
     const familiaCodigo = limparTexto(req.params.familiaCodigo, 32);
-    const validacao = validarCadastroFamilia(corpo);
+    const validacao = validarCadastroFamilia(corpo, true);
     if (validacao.erro) return res.status(400).json({ erro: validacao.erro });
-    if (!familiaCodigo || !Array.isArray(corpo.originais) || !corpo.originais.length) {
+    if (!familiaCodigo || !Array.isArray(corpo.originais) || !corpo.originais.length || !Array.isArray(corpo.excluirIds)) {
         return res.status(400).json({ erro: "Abra novamente a família para editar." });
     }
-
     let client;
     try {
         client = await pool.connect();
         await client.query("BEGIN");
-        // Serializa edições desta família entre os computadores.
-        await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["familia:" + familiaCodigo]);
+        await client.query("SELECT pg_advisory_xact_lock(hashtext('controle-acesso-cadastros'))");
         const { rows: atuais } = await client.query(
-            "SELECT * FROM pessoas WHERE familia_codigo = $1 ORDER BY id FOR UPDATE",
-            [familiaCodigo]
-        );
-        const recusar = async (status, erro) => {
-            await client.query("ROLLBACK");
-            return res.status(status).json({ erro });
-        };
+            "SELECT * FROM pessoas WHERE familia_codigo = $1 AND excluido_em IS NULL ORDER BY id FOR UPDATE", [familiaCodigo]);
+        const recusar = async (status, erro) => { await client.query("ROLLBACK"); return res.status(status).json({ erro }); };
         if (!atuais.length) return await recusar(404, "Família não encontrada.");
         if (retratoFamilia(atuais.map(linhaParaVisitante)) !== retratoFamilia(corpo.originais)) {
-            return await recusar(409, "Esta família foi alterada em outro computador ou no banco. Feche e abra a edição novamente para carregar os dados atuais.");
+            return await recusar(409, "Esta família foi alterada em outro computador ou no banco. Feche e abra a edição novamente.");
         }
-
         const porId = new Map(atuais.map(pessoa => [String(pessoa.id), pessoa]));
+        const originais = new Map(corpo.originais.map(pessoa => [String(pessoa.id), pessoa]));
+        const excluirIds = corpo.excluirIds.map(String);
         const idsRecebidos = validacao.integrantes.filter(item => item.id).map(item => item.id);
-        if (new Set(idsRecebidos).size !== idsRecebidos.length ||
-            idsRecebidos.some(id => !porId.has(id)) || idsRecebidos.length !== atuais.length) {
-            return await recusar(400, "Os integrantes existentes devem continuar na mesma família. Reabra a edição.");
+        const todosIds = [...idsRecebidos, ...excluirIds];
+        if (new Set(todosIds).size !== todosIds.length || todosIds.some(id => !porId.has(id)) || todosIds.length !== atuais.length) {
+            return await recusar(400, "A lista de integrantes está incompleta. Reabra a edição.");
         }
-
-        const nomesAlterados = validacao.integrantes.filter(item =>
-            !item.id || item.nome !== porId.get(item.id).nome
-        );
-        if (corpo.confirmarDuplicados !== true && nomesAlterados.length) {
-            const duplicados = await detectarDuplicados(nomesAlterados, client, nomesAlterados.filter(item => item.id).map(item => item.id));
+        for (const id of excluirIds) {
+            if (originais.get(id)?.versao !== linhaParaVisitante(porId.get(id)).versao) {
+                return await recusar(409, "Uma pessoa que seria excluída foi alterada ou teve a entrada registrada. Reabra a edição para conferir.");
+            }
+        }
+        if (excluirIds.some(id => normalizarTexto(porId.get(id).nome) === normalizarTexto(atuais[0].responsavel)) && validacao.integrantes.length &&
+            !validacao.integrantes.some(item => normalizarTexto(item.nome) === normalizarTexto(validacao.responsavel))) {
+            return await recusar(400, "Escolha outro integrante como responsável antes de excluir o responsável atual.");
+        }
+        for (const item of validacao.integrantes.filter(item => item.id)) {
+            if (item.status !== originais.get(item.id)?.status && item.versao !== linhaParaVisitante(porId.get(item.id)).versao) {
+                return await recusar(409, "A situação de um integrante mudou em outro computador. Reabra a edição para conferir.");
+            }
+        }
+        // Compara o conjunto final inteiro, sem os integrantes removidos ou substituídos.
+        if (corpo.confirmarDuplicados !== true && validacao.integrantes.some(item => !item.id || item.nome !== porId.get(item.id).nome)) {
+            const duplicados = await detectarDuplicados(validacao.integrantes, client, [...porId.keys()]);
             if (duplicados.length) {
                 await client.query("ROLLBACK");
-                return res.status(409).json({
-                    erro: "Encontramos nomes iguais ou escritos de forma parecida.",
-                    precisaConfirmacao: true,
-                    duplicados
-                });
+                return res.status(409).json({ erro: "Encontramos nomes iguais ou parecidos.", precisaConfirmacao: true, duplicados });
             }
         }
-
-        // Quando o título era o próprio responsável, acompanha a troca do nome.
-        if (validacao.familia === atuais[0].familia && atuais[0].familia === atuais[0].responsavel) {
-            validacao.familia = validacao.responsavel;
+        for (const id of excluirIds) {
+            // Exclusão reversível no banco: não participa de listas, busca, contagens ou TXT.
+            await client.query("UPDATE pessoas SET excluido_em = NOW() WHERE id::text = $1", [id]);
         }
-        await client.query(
-            "UPDATE pessoas SET familia = $2, responsavel = $3 WHERE familia_codigo = $1",
-            [familiaCodigo, validacao.familia, validacao.responsavel]
-        );
+        if (validacao.familia === atuais[0].familia && atuais[0].familia === atuais[0].responsavel) validacao.familia = validacao.responsavel;
+        await client.query("UPDATE pessoas SET familia = $2, responsavel = $3 WHERE familia_codigo = $1 AND excluido_em IS NULL",
+            [familiaCodigo, validacao.familia, validacao.responsavel]);
         for (const integrante of validacao.integrantes) {
             if (integrante.id) {
-                // Conserva ID, código, entrada e horário já registrados.
-                await client.query(
-                    "UPDATE pessoas SET nome = $3, tipo = $4 WHERE id::text = $1 AND familia_codigo = $2",
-                    [integrante.id, familiaCodigo, integrante.nome, integrante.tipo]
-                );
-            } else {
-                await client.query(`
-                    INSERT INTO pessoas (
-                        nome, familia, responsavel, tipo, codigo, familia_codigo,
-                        entrou, horario, data_entrada, timestamp_entrada
-                    ) VALUES ($1, $2, $3, $4, $5, $6, FALSE, '', '', NULL)
-                `, [integrante.nome, validacao.familia, validacao.responsavel,
-                    integrante.tipo, gerarCodigo("CONV"), familiaCodigo]);
-            }
+                await client.query("UPDATE pessoas SET nome = $2, tipo = $3 WHERE id::text = $1", [integrante.id, integrante.nome, integrante.tipo]);
+                // Se o operador não mudou a situação, conserva a entrada feita em outro PC.
+                if (integrante.status !== originais.get(integrante.id).status) await gravarStatus(client, integrante.id, integrante.status);
+            } else await inserirIntegrante(client, integrante, validacao.familia, validacao.responsavel, familiaCodigo);
         }
-        const { rows } = await client.query(
-            "SELECT * FROM pessoas WHERE familia_codigo = $1 ORDER BY id",
-            [familiaCodigo]
-        );
+        const { rows } = await client.query("SELECT * FROM pessoas WHERE familia_codigo = $1 AND excluido_em IS NULL ORDER BY id", [familiaCodigo]);
         await client.query("COMMIT");
         avisarTodos();
-        return res.json({
-            familia: validacao.familia,
-            responsavel: validacao.responsavel,
-            familiaCodigo,
-            visitantes: rows.map(linhaParaVisitante)
-        });
+        return res.json({ familia: validacao.familia, responsavel: validacao.responsavel, familiaCodigo, visitantes: rows.map(linhaParaVisitante), excluidos: excluirIds });
     } catch (erro) {
         if (client) await client.query("ROLLBACK").catch(() => {});
         console.error("Erro ao editar família:", erro);
         return res.status(500).json({ erro: mensagemErroCadastro(erro) });
-    } finally {
-        client?.release();
-    }
+    } finally { client?.release(); }
 });
-
 
 // Compatibilidade com clientes antigos da rota individual.
 app.post("/api/visitantes", async (req, res) => {
@@ -636,132 +648,80 @@ app.post("/api/visitantes", async (req, res) => {
 // MARCAR TODOS COMO PRESENTES
 // ======================================================
 
-app.patch("/api/visitantes/status/todos", async (req, res) => {
-    try {
-        const momento = momentoSP();
-
-        const resultado = await pool.query(`
-            UPDATE pessoas
-            SET
-                entrou = TRUE,
-                horario = $1,
-                data_entrada = $2,
-                timestamp_entrada = $3::timestamptz
-            WHERE entrou = FALSE
-            RETURNING id
-        `, [
-            momento.hora,
-            momento.data,
-            momento.iso
-        ]);
-
-        avisarTodos();
-
-        return res.json({
-            ok: true,
-            atualizados: resultado.rowCount
-        });
-    } catch (erro) {
-        console.error("Erro ao marcar todos como presentes:", erro);
-        return res.status(500).json({
-            erro: "Não foi possível marcar todos como presentes."
-        });
-    }
+app.patch("/api/visitantes/status/todos", (req, res) => {
+    res.status(400).json({ erro: "Selecione os integrantes dentro de cada família e escolha o destino." });
 });
 
-
-// ======================================================
-// MARCAR UMA FAMÍLIA INTEIRA COMO PRESENTE
-// ======================================================
-
+// Seleção explícita e transação: ou todos mudam, ou nenhum muda.
 app.patch("/api/familias/:familiaCodigo/status", async (req, res) => {
-    try {
-        const familiaCodigo = limparTexto(req.params.familiaCodigo, 32);
-        const status = req.body?.status;
-
-        if (status !== "entrou") {
-            return res.status(400).json({
-                erro: "Status inválido."
-            });
-        }
-
-        if (!familiaCodigo) {
-            return res.status(400).json({
-                erro: "Família inválida."
-            });
-        }
-
-        const momento = momentoSP();
-
-        const resultado = await pool.query(`
-            UPDATE pessoas
-            SET
-                entrou = TRUE,
-                horario = $2,
-                data_entrada = $3,
-                timestamp_entrada = $4::timestamptz
-            WHERE familia_codigo = $1
-              AND entrou = FALSE
-            RETURNING id
-        `, [
-            familiaCodigo,
-            momento.hora,
-            momento.data,
-            momento.iso
-        ]);
-
-        avisarTodos();
-
-        return res.json({
-            ok: true,
-            atualizados: resultado.rowCount,
-            familiaCodigo
-        });
-
-    } catch (erro) {
-        console.error("Erro ao marcar família como presente:", erro);
-
-        return res.status(500).json({
-            erro: "Não foi possível marcar a família como presente."
-        });
+    const status = req.body?.status;
+    const selecionados = req.body?.pessoas;
+    if (!["entrou", "não entrou", "nao_veio"].includes(status) || !Array.isArray(selecionados) || !selecionados.length ||
+        selecionados.some(p => !p || !p.id || !p.versao) || new Set(selecionados.map(p => String(p.id))).size !== selecionados.length) {
+        return res.status(400).json({ erro: "Selecione as pessoas e uma situação válida." });
     }
+    let client;
+    try {
+        client = await pool.connect();
+        await client.query("BEGIN");
+        const { rows } = await client.query(
+            "SELECT * FROM pessoas WHERE familia_codigo = $1 AND excluido_em IS NULL ORDER BY id FOR UPDATE", [req.params.familiaCodigo]);
+        const porId = new Map(rows.map(row => [String(row.id), linhaParaVisitante(row)]));
+        if (selecionados.some(p => porId.get(String(p.id))?.versao !== p.versao)) {
+            await client.query("ROLLBACK");
+            return res.status(409).json({ erro: "A família mudou em outro computador. Confira a lista atualizada e selecione novamente." });
+        }
+        const atualizados = [];
+        for (const p of selecionados) atualizados.push(await gravarStatus(client, p.id, status));
+        await client.query("COMMIT");
+        avisarTodos();
+        res.json({ atualizados: atualizados.length, visitantes: atualizados });
+    } catch (erro) {
+        if (client) await client.query("ROLLBACK").catch(() => {});
+        console.error("Erro ao mover integrantes:", erro);
+        res.status(500).json({ erro: "Não foi possível mover os integrantes." });
+    } finally { client?.release(); }
 });
-
-// ======================================================
-// MARCAR OU DESFAZER ENTRADA
-// ======================================================
 
 app.patch("/api/visitantes/:id/status", async (req, res) => {
+    const { status, versao } = req.body || {};
+    if (!["entrou", "não entrou", "nao_veio"].includes(status) || !versao) return res.status(400).json({ erro: "Atualize a lista e escolha uma situação válida." });
+    let client;
     try {
-        const id = String(req.params.id);
-        const status = req.body.status;
-        if (status !== "entrou" && status !== "não entrou") {
-            return res.status(400).json({ erro: "Status inválido." });
+        client = await pool.connect();
+        await client.query("BEGIN");
+        const { rows } = await client.query("SELECT * FROM pessoas WHERE id::text = $1 AND excluido_em IS NULL FOR UPDATE", [req.params.id]);
+        if (!rows[0]) { await client.query("ROLLBACK"); return res.status(404).json({ erro: "Visitante não encontrado." }); }
+        if (linhaParaVisitante(rows[0]).versao !== versao) {
+            await client.query("ROLLBACK");
+            return res.status(409).json({ erro: "Esta pessoa mudou em outro computador. Confira a lista atualizada e tente novamente." });
         }
-
-        const entrou = status === "entrou";
-        const momento = momentoSP();
-        const { rows } = await pool.query(`
-            UPDATE pessoas
-            SET
-                entrou = $2,
-                horario = CASE WHEN $2 THEN $3 ELSE '' END,
-                data_entrada = CASE WHEN $2 THEN $4 ELSE '' END,
-                timestamp_entrada = CASE WHEN $2 THEN $5::timestamptz ELSE NULL END
-            WHERE id::text = $1
-            RETURNING *
-        `, [id, entrou, momento.hora, momento.data, momento.iso]);
-
-        if (!rows[0]) {
-            return res.status(404).json({ erro: "Visitante não encontrado." });
-        }
-
-        const visitante = linhaParaVisitante(rows[0]);
+        const visitante = await gravarStatus(client, req.params.id, status);
+        await client.query("COMMIT");
         avisarTodos();
         return res.json(visitante);
     } catch (erro) {
-        console.error("Erro ao alterar status:", erro);
-        return res.status(500).json({ erro: "Não foi possível alterar o status." });
+        if (client) await client.query("ROLLBACK").catch(() => {});
+        console.error("Erro ao alterar situação:", erro);
+        return res.status(500).json({ erro: "Não foi possível alterar a situação." });
+    } finally { client?.release(); }
+});
+
+app.get("/api/semelhantes", async (req, res) => {
+    try {
+        const { rows } = await pool.query("SELECT * FROM pessoas WHERE excluido_em IS NULL ORDER BY nome, id");
+        const pessoas = rows.map(linhaParaVisitante);
+        const pares = [];
+        let total = 0;
+        for (let i = 0; i < pessoas.length; i++) for (let j = i + 1; j < pessoas.length; j++) {
+            if (!nomesParecidos(pessoas[i].nome, pessoas[j].nome)) continue;
+            total++;
+            if (pares.length < 200) pares.push({ a: pessoas[i], b: pessoas[j], exato: normalizarTexto(pessoas[i].nome) === normalizarTexto(pessoas[j].nome) });
+        }
+        res.json({ pares, total, limitado: total > pares.length });
+    } catch (erro) {
+        console.error("Erro ao comparar nomes:", erro);
+        res.status(500).json({ erro: "Não foi possível conferir os nomes." });
     }
 });
 
@@ -805,12 +765,13 @@ function adicionarSecaoRelatorio(linhas, titulo, pessoas, formatarData) {
 app.get("/exportar", async (req, res) => {
     try {
         const { rows } = await pool.query(`
-            SELECT * FROM pessoas
+            SELECT * FROM pessoas WHERE excluido_em IS NULL
             ORDER BY familia ASC, nome ASC
         `);
         const visitantes = rows.map(linhaParaVisitante);
         const presentes = visitantes.filter(pessoa => pessoa.status === "entrou");
-        const ausentes = visitantes.filter(pessoa => pessoa.status !== "entrou");
+        const faltam = visitantes.filter(pessoa => pessoa.status === "não entrou");
+        const naoVieram = visitantes.filter(pessoa => pessoa.status === "nao_veio");
         const agora = new Date();
         const formatarData = new Intl.DateTimeFormat("pt-BR", {
             dateStyle: "short",
@@ -823,19 +784,21 @@ app.get("/exportar", async (req, res) => {
             `Gerado em: ${formatarData.format(agora)}`,
             `Total cadastrado: ${visitantes.length}`,
             `Presentes: ${presentes.length}`,
-            `Ausentes: ${ausentes.length}`,
+            `Falta entrar: ${faltam.length}`,
+            `Não veio: ${naoVieram.length}`,
             ""
         ];
 
-        adicionarSecaoRelatorio(linhas, "PRESENTES", presentes, formatarData);
-        adicionarSecaoRelatorio(linhas, "AUSENTES", ausentes, formatarData);
+        adicionarSecaoRelatorio(linhas, "JÁ ENTRARAM", presentes, formatarData);
+        adicionarSecaoRelatorio(linhas, "FALTA ENTRAR", faltam, formatarData);
+        adicionarSecaoRelatorio(linhas, "NÃO VEIO", naoVieram, formatarData);
 
         const arquivo = "\uFEFF" + linhas.join("\r\n");
         const dataArquivo = agora.toISOString().slice(0, 10);
         res.setHeader("Content-Type", "text/plain; charset=utf-8");
         res.setHeader(
             "Content-Disposition",
-            `attachment; filename="relatorio-presentes-ausentes-${dataArquivo}.txt"`
+            `attachment; filename="relatorio-tres-situacoes-${dataArquivo}.txt"`
         );
         return res.send(arquivo);
     } catch (erro) {
@@ -850,7 +813,7 @@ app.get("/exportar", async (req, res) => {
 
 app.get("/health", async (req, res) => {
     try {
-        const banco = await pool.query("SELECT COUNT(*)::int AS total FROM pessoas");
+        const banco = await pool.query("SELECT COUNT(*)::int AS total FROM pessoas WHERE excluido_em IS NULL");
         return res.json({
             ok: true,
             banco: "online",
@@ -888,3 +851,4 @@ iniciarBanco()
         console.error("Não foi possível iniciar o banco:", erro);
         process.exit(1);
     });
+
