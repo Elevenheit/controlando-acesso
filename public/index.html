@@ -3572,6 +3572,32 @@ body {
 }
 
 
+/* Cadastro compacto e ações dentro do balão da família. */
+#modalCadastro .modal-familia { max-width: 680px; padding: 22px; }
+#modalCadastro .modal-icone { width: 38px; height: 38px; margin-bottom: 10px; font-size: 20px; }
+#modalCadastro .campo { margin-top: 12px; min-width: 0; }
+#modalCadastro .campo input, #modalCadastro .campo select { height: 44px; }
+#modalCadastro .campo-familia { max-width: 330px; }
+#modalCadastro .campo-ajuda { display: block; color: var(--texto-secundario); font-size: 11px; margin-top: 5px; line-height: 1.4; }
+#modalCadastro .integrante-linha { grid-template-columns: minmax(0, 1fr) 148px 34px; gap: 4px 9px; }
+#modalCadastro .remover-integrante { width: 34px; height: 44px; }
+#modalCadastro .usar-responsavel { grid-column: 1 / -1; justify-self: start; border: 0; padding: 3px 0; background: transparent; color: var(--smurf-1); font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+#modalCadastro .usar-responsavel[aria-pressed="true"] { color: var(--verde-escuro); }
+#modalCadastro .modal-botoes { margin-top: 18px; }
+.familia-editar-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 16px; background: #F5FBFF; border-bottom: 1px solid #E3EEF4; }
+.botao-editar-familia { border: 1px solid #CDE6F3; border-radius: 10px; padding: 9px 12px; background: white; color: var(--smurf-1); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.botao-editar-familia:hover { background: #EAF7FE; }
+.tipo-pill.adolescente, .familia-chip.adolescentes { background: #F0EAFE; color: #7152AD; }
+@media (max-width: 620px) {
+    #modalCadastro .modal-familia { padding: 18px; }
+    #modalCadastro .campo-familia { max-width: 100%; }
+    #modalCadastro .integrante-linha { grid-template-columns: minmax(0, 1fr) 34px; gap: 4px 8px; }
+    #modalCadastro .integrante-linha .campo:first-child { grid-column: 1 / -1; }
+    #modalCadastro .integrante-linha .campo:nth-child(2) { margin-top: 4px; }
+    #modalCadastro .campo input, #modalCadastro .campo select { font-size: 16px; }
+    #modalCadastro .integrante-linha + .integrante-linha { margin-top: 8px; padding-top: 6px; border-top: 1px solid #E3EEF4; }
+    .familia-editar-acoes { padding: 10px; }
+}
 </style>
 
 </head>
@@ -3679,7 +3705,7 @@ body {
             <input
                 id="busca"
                 type="search"
-                placeholder="Pesquisar por nome, família, adulto, criança ou ID..."
+                placeholder="Pesquisar por nome, família, adulto, criança, adolescente ou ID..."
                 autocomplete="off"
                 autofocus
             >
@@ -3813,6 +3839,7 @@ body {
 <div
     id="modalCadastro"
     class="modal-fundo"
+    role="dialog" aria-modal="true" aria-labelledby="tituloCadastro"
 >
 
     <div class="modal modal-familia">
@@ -3823,34 +3850,19 @@ body {
         </div>
 
 
-        <h2>
-            Adicionar família
-        </h2>
+        <h2 id="tituloCadastro">Adicionar família</h2>
 
 
-        <p class="modal-descricao">
-            Informe a família, o responsável e adicione todos os
-            integrantes. Use uma linha para cada adulto ou criança.
-        </p>
+        <p class="modal-descricao" id="descricaoCadastro">Informe o responsável e use uma linha para cada integrante. O nome da família é opcional.</p>
 
 
         <form id="formCadastro">
 
 
-            <div class="campo">
-
-                <label for="novaFamilia">
-                    Nome da família
-                </label>
-
-                <input
-                    id="novaFamilia"
-                    type="text"
-                    placeholder="Ex: Silva — família da Maria"
-                    autocomplete="off"
-                    required
-                >
-
+            <div class="campo campo-familia">
+                <label for="novaFamilia">Nome da família (opcional)</label>
+                <input id="novaFamilia" type="text" maxlength="120" placeholder="Ex: Família Silva" autocomplete="off" aria-describedby="ajudaFamilia">
+                <small class="campo-ajuda" id="ajudaFamilia">Se deixar vazio, usaremos o nome do responsável.</small>
             </div>
 
 
@@ -3862,6 +3874,7 @@ body {
 
                 <input
                     id="novoResponsavel"
+                    maxlength="120"
                     type="text"
                     placeholder="Ex: Maria Aparecida da Silva"
                     autocomplete="off"
@@ -4279,6 +4292,15 @@ function palavraCombina(
 }
 
 
+function tipoPessoa(tipo) {
+    const valor = normalizarTexto(tipo);
+    return ["crianca", "adolescente"].includes(valor) ? valor : "adulto";
+}
+
+function nomeTipo(tipo) {
+    return { adulto: "Adulto", crianca: "Criança", adolescente: "Adolescente" }[tipoPessoa(tipo)];
+}
+
 function correspondeBusca(
     pessoa,
     digitado
@@ -4297,10 +4319,7 @@ function correspondeBusca(
     }
 
 
-    const tipo =
-        pessoa.tipo === "crianca"
-            ? "crianca criancas"
-            : "adulto adultos";
+    const tipo = { crianca: "crianca criancas", adulto: "adulto adultos", adolescente: "adolescente adolescentes" }[tipoPessoa(pessoa.tipo)];
 
 
     const campos = [
@@ -4809,12 +4828,8 @@ function renderizarLista() {
                         ) === grupo.chave
                 );
 
-            const adultos =
-                todosDaFamilia.filter(
-                    pessoa =>
-                        pessoa.tipo !==
-                        "crianca"
-                ).length;
+            const adultos = todosDaFamilia.filter(pessoa => tipoPessoa(pessoa.tipo) === "adulto").length;
+            const adolescentes = todosDaFamilia.filter(pessoa => tipoPessoa(pessoa.tipo) === "adolescente").length;
 
             const criancas =
                 todosDaFamilia.filter(
@@ -4985,9 +5000,10 @@ function renderizarLista() {
                 )
             );
 
-            if (
-                presentes > 0
-            ) {
+            if (adolescentes > 0) {
+                resumo.appendChild(criarChip(`${adolescentes} ${adolescentes === 1 ? "adolescente" : "adolescentes"}`, "adolescentes"));
+            }
+            if (presentes > 0) {
 
                 resumo.appendChild(
                     criarChip(
@@ -5179,26 +5195,31 @@ function renderizarLista() {
                     "div"
                 );
 
-            membros.className =
-                "familia-membros";
+            membros.className = "familia-membros";
+            const editarAcoes = document.createElement("div");
+            editarAcoes.className = "familia-editar-acoes";
+            const editar = document.createElement("button");
+            editar.type = "button";
+            editar.className = "botao-editar-familia";
+            editar.textContent = "Editar integrantes";
+            editar.addEventListener("click", () => abrirEdicaoFamilia(grupo));
+            const acrescentar = document.createElement("button");
+            acrescentar.type = "button";
+            acrescentar.className = "botao-editar-familia";
+            acrescentar.textContent = "+ Adicionar integrante";
+            acrescentar.addEventListener("click", () => abrirEdicaoFamilia(grupo, true));
+            editarAcoes.append(editar, acrescentar);
+            membros.appendChild(editarAcoes);
 
 
             grupo.pessoas
                 .sort(
                     (a, b) => {
 
-                        // Adultos primeiro e depois crianças; dentro do tipo, ordem alfabética.
-                        if (
-                            a.tipo !==
-                            b.tipo
-                        ) {
-
-                            return a.tipo === "crianca"
-                                ? 1
-                                : -1;
-
-                        }
-
+                        // Adultos, adolescentes e crianças; nomes em ordem alfabética.
+                        const ordem = { adulto: 0, adolescente: 1, crianca: 2 };
+                        const diferenca = ordem[tipoPessoa(a.tipo)] - ordem[tipoPessoa(b.tipo)];
+                        if (diferenca) return diferenca;
                         return String(a.nome)
                             .localeCompare(
                                 String(b.nome),
@@ -5265,17 +5286,8 @@ function renderizarLista() {
                                 "span"
                             );
 
-                        tipo.className =
-                            `tipo-pill ${
-                                pessoa.tipo === "crianca"
-                                    ? "crianca"
-                                    : "adulto"
-                            }`;
-
-                        tipo.textContent =
-                            pessoa.tipo === "crianca"
-                                ? "Criança"
-                                : "Adulto";
+                        tipo.className = `tipo-pill ${tipoPessoa(pessoa.tipo)}`;
+                        tipo.textContent = nomeTipo(pessoa.tipo);
 
 
                         topo.appendChild(
@@ -5957,620 +5969,253 @@ async function marcarEntrada(
 // CADASTRO
 // =====================================================
 
+// CADASTRO E EDIÇÃO DE FAMÍLIA
 let numeroLinhaIntegrante = 0;
-
+let familiaEmEdicao = null;
+let salvandoFamilia = false;
+let linhaResponsavel = null;
+const tituloCadastro = document.getElementById("tituloCadastro");
+const descricaoCadastro = document.getElementById("descricaoCadastro");
 
 function atualizarBotoesRemover() {
-
-    const linhas =
-        linhasIntegrantes.querySelectorAll(
-            ".integrante-linha"
-        );
-
-
-    linhas.forEach(
-        linha => {
-
-            const botao =
-                linha.querySelector(
-                    ".remover-integrante"
-                );
-
-
-            botao.disabled =
-                linhas.length === 1;
-
-        }
-    );
-
+    const linhas = [...linhasIntegrantes.querySelectorAll(".integrante-linha")];
+    linhas.forEach(linha => {
+        linha.querySelector(".remover-integrante").disabled =
+            salvandoFamilia || Boolean(linha.dataset.id) || linhas.length === 1;
+    });
 }
 
+function atualizarResponsavelSelecionado() {
+    const nome = normalizarTexto(novoResponsavel.value);
+    const linhas = [...linhasIntegrantes.querySelectorAll(".integrante-linha")];
+    if (!linhaResponsavel || !linhas.includes(linhaResponsavel) ||
+        normalizarTexto(linhaResponsavel.querySelector(".integrante-nome").value) !== nome) {
+        linhaResponsavel = linhas.find(linha => nome && normalizarTexto(linha.querySelector(".integrante-nome").value) === nome) || null;
+    }
+    linhas.forEach(linha => {
+        const escolhido = linha === linhaResponsavel;
+        const botao = linha.querySelector(".usar-responsavel");
+        botao.textContent = escolhido ? "✓ Responsável" : "Usar como responsável";
+        botao.setAttribute("aria-pressed", String(escolhido));
+    });
+}
 
-function criarLinhaIntegrante(
-    valores = {}
-) {
-
+function criarLinhaIntegrante(valores = {}) {
     numeroLinhaIntegrante += 1;
-
-
-    const linha =
-        document.createElement(
-            "div"
-        );
-
-
-    linha.className =
-        "integrante-linha";
-
-
-    const campoNome =
-        document.createElement(
-            "div"
-        );
-
-
-    campoNome.className =
-        "campo";
-
-
-    const idNome =
-        `integranteNome${numeroLinhaIntegrante}`;
-
-
-    const labelNome =
-        document.createElement(
-            "label"
-        );
-
-
-    labelNome.htmlFor =
-        idNome;
-
-
-    labelNome.textContent =
-        "Nome completo";
-
-
-    const inputNome =
-        document.createElement(
-            "input"
-        );
-
-
-    inputNome.id =
-        idNome;
-
-
-    inputNome.className =
-        "integrante-nome";
-
-
-    inputNome.type =
-        "text";
-
-
-    inputNome.placeholder =
-        "Nome do integrante";
-
-
-    inputNome.autocomplete =
-        "off";
-
-
-    inputNome.required =
-        true;
-
-
-    inputNome.value =
-        valores.nome || "";
-
-
-    campoNome.append(
-        labelNome,
-        inputNome
-    );
-
-
-    const campoTipo =
-        document.createElement(
-            "div"
-        );
-
-
-    campoTipo.className =
-        "campo";
-
-
-    const idTipo =
-        `integranteTipo${numeroLinhaIntegrante}`;
-
-
-    const labelTipo =
-        document.createElement(
-            "label"
-        );
-
-
-    labelTipo.htmlFor =
-        idTipo;
-
-
-    labelTipo.textContent =
-        "Tipo";
-
-
-    const selectTipo =
-        document.createElement(
-            "select"
-        );
-
-
-    selectTipo.id =
-        idTipo;
-
-
-    selectTipo.className =
-        "integrante-tipo";
-
-
-    const opcaoAdulto =
-        new Option(
-            "Adulto",
-            "adulto"
-        );
-
-
-    const opcaoCrianca =
-        new Option(
-            "Criança",
-            "crianca"
-        );
-
-
-    selectTipo.append(
-        opcaoAdulto,
-        opcaoCrianca
-    );
-
-
-    selectTipo.value =
-        valores.tipo === "crianca"
-            ? "crianca"
-            : "adulto";
-
-
-    campoTipo.append(
-        labelTipo,
-        selectTipo
-    );
-
-
-    const remover =
-        document.createElement(
-            "button"
-        );
-
-
-    remover.type =
-        "button";
-
-
-    remover.className =
-        "remover-integrante";
-
-
-    remover.setAttribute(
-        "aria-label",
-        "Remover integrante"
-    );
-
-
-    remover.title =
-        "Remover integrante";
-
-
-    remover.textContent =
-        "×";
-
-
-    remover.addEventListener(
-        "click",
-        () => {
-
-            linha.remove();
-
-            atualizarBotoesRemover();
-
+    const linha = document.createElement("div");
+    linha.className = "integrante-linha";
+    if (valores.id != null) linha.dataset.id = String(valores.id);
+
+    const campoNome = document.createElement("div");
+    campoNome.className = "campo";
+    const labelNome = document.createElement("label");
+    const inputNome = document.createElement("input");
+    inputNome.id = `integranteNome${numeroLinhaIntegrante}`;
+    labelNome.htmlFor = inputNome.id;
+    labelNome.textContent = "Nome completo";
+    inputNome.className = "integrante-nome";
+    inputNome.type = "text";
+    inputNome.placeholder = "Nome do integrante";
+    inputNome.autocomplete = "off";
+    inputNome.required = true;
+    inputNome.maxLength = 120;
+    inputNome.value = valores.nome || "";
+    campoNome.append(labelNome, inputNome);
+
+    const campoTipo = document.createElement("div");
+    campoTipo.className = "campo";
+    const labelTipo = document.createElement("label");
+    const selectTipo = document.createElement("select");
+    selectTipo.id = `integranteTipo${numeroLinhaIntegrante}`;
+    labelTipo.htmlFor = selectTipo.id;
+    labelTipo.textContent = "Tipo";
+    selectTipo.className = "integrante-tipo";
+    selectTipo.append(new Option("Adulto", "adulto"), new Option("Criança", "crianca"), new Option("Adolescente", "adolescente"));
+    selectTipo.value = tipoPessoa(valores.tipo);
+    campoTipo.append(labelTipo, selectTipo);
+
+    const remover = document.createElement("button");
+    remover.type = "button";
+    remover.className = "remover-integrante";
+    remover.setAttribute("aria-label", "Remover nova linha");
+    remover.title = "Remover nova linha";
+    remover.textContent = "×";
+    remover.addEventListener("click", () => {
+        if (linha.dataset.id || salvandoFamilia) return;
+        linha.remove();
+        atualizarBotoesRemover();
+        atualizarResponsavelSelecionado();
+    });
+
+    const escolher = document.createElement("button");
+    escolher.type = "button";
+    escolher.className = "usar-responsavel";
+    escolher.addEventListener("click", () => {
+        if (!inputNome.value.trim()) {
+            inputNome.focus();
+            return;
         }
-    );
-
-
-    linha.append(
-        campoNome,
-        campoTipo,
-        remover
-    );
-
-
-    linhasIntegrantes.appendChild(
-        linha
-    );
-
-
+        linhaResponsavel = linha;
+        novoResponsavel.value = inputNome.value.trim();
+        atualizarResponsavelSelecionado();
+    });
+    inputNome.addEventListener("input", () => {
+        if (linhaResponsavel === linha) novoResponsavel.value = inputNome.value.trim();
+        atualizarResponsavelSelecionado();
+    });
+    linha.append(campoNome, campoTipo, remover, escolher);
+    linhasIntegrantes.appendChild(linha);
     atualizarBotoesRemover();
-
-
+    atualizarResponsavelSelecionado();
     return inputNome;
-
 }
-
 
 function reiniciarLinhasIntegrantes() {
-
-    linhasIntegrantes.innerHTML =
-        "";
-
-
+    linhasIntegrantes.replaceChildren();
+    linhaResponsavel = null;
     criarLinhaIntegrante();
-
 }
 
+function configurarModalFamilia(edicao) {
+    tituloCadastro.textContent = edicao ? "Editar família e integrantes" : "Adicionar família";
+    descricaoCadastro.textContent = edicao
+        ? "Altere os nomes, os tipos e o responsável ou acrescente integrantes. As entradas já registradas serão mantidas."
+        : "Informe o responsável e use uma linha para cada integrante. O nome da família é opcional.";
+    salvarCadastro.textContent = edicao ? "Salvar alterações" : "Salvar família";
+}
 
-abrirCadastro.addEventListener(
-    "click",
-    () => {
+abrirCadastro.addEventListener("click", () => {
+    familiaEmEdicao = null;
+    formCadastro.reset();
+    configurarModalFamilia(false);
+    reiniciarLinhasIntegrantes();
+    modalCadastro.classList.add("aberto");
+    setTimeout(() => novoResponsavel.focus(), 40);
+});
 
-        modalCadastro.classList.add(
-            "aberto"
-        );
-
-
-        setTimeout(
-            () =>
-                novaFamilia.focus(),
-            40
-        );
-
+function abrirEdicaoFamilia(grupo, adicionar = false) {
+    if (salvandoFamilia) return;
+    const pessoas = visitantes.filter(pessoa => pessoa.familiaCodigo === grupo.familiaCodigo);
+    if (!grupo.familiaCodigo || !pessoas.length) {
+        toast("Atualize a lista e abra a família novamente.", "erro");
+        return;
     }
-);
-
+    familiaEmEdicao = {
+        familiaCodigo: grupo.familiaCodigo,
+        originais: pessoas.map(pessoa => ({
+            id: pessoa.id, nome: pessoa.nome, tipo: pessoa.tipo,
+            familia: pessoa.familia, responsavel: pessoa.responsavel
+        }))
+    };
+    formCadastro.reset();
+    novaFamilia.value = pessoas[0].familia;
+    novoResponsavel.value = pessoas[0].responsavel;
+    linhasIntegrantes.replaceChildren();
+    linhaResponsavel = null;
+    pessoas.forEach(pessoa => criarLinhaIntegrante(pessoa));
+    configurarModalFamilia(true);
+    const foco = adicionar ? criarLinhaIntegrante() : novoResponsavel;
+    modalCadastro.classList.add("aberto");
+    setTimeout(() => foco.focus(), 40);
+}
 
 function fecharCadastro() {
-
-    modalCadastro.classList.remove(
-        "aberto"
-    );
-
-
+    if (salvandoFamilia) return;
+    modalCadastro.classList.remove("aberto");
+    familiaEmEdicao = null;
     formCadastro.reset();
-
-
+    configurarModalFamilia(false);
     reiniciarLinhasIntegrantes();
-
 }
 
-
-cancelarCadastro.addEventListener(
-    "click",
-    fecharCadastro
-);
-
-
-modalCadastro.addEventListener(
-    "click",
-    evento => {
-
-        if (
-            evento.target ===
-            modalCadastro
-        ) {
-
-            fecharCadastro();
-
-        }
-
-    }
-);
-
-
-// =====================================================
-// ADICIONAR QUANTAS LINHAS FOREM NECESSÁRIAS
-// =====================================================
-
-adicionarIntegrante.addEventListener(
-    "click",
-    () => {
-
-        const input =
-            criarLinhaIntegrante();
-
-
-        input.focus();
-
-    }
-);
-
-
-// =====================================================
-// SALVAR NOVA FAMÍLIA
-// =====================================================
+cancelarCadastro.addEventListener("click", fecharCadastro);
+modalCadastro.addEventListener("click", evento => {
+    if (evento.target === modalCadastro) fecharCadastro();
+});
+novoResponsavel.addEventListener("input", atualizarResponsavelSelecionado);
+adicionarIntegrante.addEventListener("click", () => criarLinhaIntegrante().focus());
 
 function coletarIntegrantes() {
-
-    return Array.from(
-        linhasIntegrantes.querySelectorAll(
-            ".integrante-linha"
-        )
-    )
-        .map(
-            linha => ({
-
-                nome:
-                    linha.querySelector(
-                        ".integrante-nome"
-                    ).value.trim(),
-
-                tipo:
-                    linha.querySelector(
-                        ".integrante-tipo"
-                    ).value
-
-            })
-        );
-
+    return [...linhasIntegrantes.querySelectorAll(".integrante-linha")].map(linha => ({
+        id: linha.dataset.id || null,
+        nome: linha.querySelector(".integrante-nome").value.trim(),
+        tipo: linha.querySelector(".integrante-tipo").value
+    }));
 }
 
-
-async function enviarFamilia(
-    cadastro,
-    confirmarDuplicados = false
-) {
-
-    return fetch(
-        "/api/familias",
-        {
-
-            method:
-                "POST",
-
-            headers: {
-
-                "Content-Type":
-                    "application/json"
-
-            },
-
-            body:
-                JSON.stringify({
-                    ...cadastro,
-                    confirmarDuplicados
-                })
-
-        }
-    );
-
+async function enviarFamilia(cadastro, confirmarDuplicados = false) {
+    return fetch(cadastro.familiaCodigo ? `/api/familias/${encodeURIComponent(cadastro.familiaCodigo)}` : "/api/familias", {
+        method: cadastro.familiaCodigo ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...cadastro, confirmarDuplicados })
+    });
 }
 
-
-function confirmarNomesParecidos(
-    duplicados
-) {
-
-    const exemplos =
-        duplicados
-            .slice(0, 8)
-            .map(
-                item =>
-                    `• ${item.novoNome} parece com ${item.nomeEncontrado} ` +
-                    `(${item.familiaEncontrada}${
-                        item.codigoEncontrado
-                            ? `, ${item.codigoEncontrado}`
-                            : ""
-                    })`
-            )
-            .join("\n");
-
-
-    const restantes =
-        duplicados.length > 8
-            ? `\n...e mais ${duplicados.length - 8}.`
-            : "";
-
-
-    return window.confirm(
-        "Encontramos nomes iguais ou escritos de forma parecida:\n\n" +
-        exemplos +
-        restantes +
-        "\n\nOs IDs serão diferentes. Deseja cadastrar mesmo assim?"
-    );
-
+function confirmarNomesParecidos(duplicados) {
+    const exemplos = duplicados.slice(0, 8).map(item =>
+        `• ${item.novoNome} parece com ${item.nomeEncontrado} (${item.familiaEncontrada}${item.codigoEncontrado ? `, ${item.codigoEncontrado}` : ""})`
+    ).join("\n");
+    const restantes = duplicados.length > 8 ? `\n...e mais ${duplicados.length - 8}.` : "";
+    return window.confirm("Encontramos nomes iguais ou escritos de forma parecida:\n\n" + exemplos + restantes + "\n\nSão pessoas distintas? Deseja salvar mesmo assim?");
 }
 
-formCadastro.addEventListener(
-    "submit",
-    async evento => {
-
-
-        evento.preventDefault();
-
-
-        const familia =
-            novaFamilia.value.trim();
-
-
-        const responsavel =
-            novoResponsavel.value.trim();
-
-
-        const integrantes =
-            coletarIntegrantes();
-
-
-        if (!familia) {
-
-            toast(
-                "Digite o nome da família.",
-                "erro"
-            );
-
-            return;
-
-        }
-
-
-        if (!responsavel) {
-
-            toast(
-                "Digite o nome completo do responsável.",
-                "erro"
-            );
-
-            return;
-
-        }
-
-
-        if (
-            integrantes.length === 0 ||
-            integrantes.some(
-                integrante =>
-                    !integrante.nome
-            )
-        ) {
-
-            toast(
-                "Preencha o nome de todos os integrantes.",
-                "erro"
-            );
-
-            return;
-
-        }
-
-
-        salvarCadastro.disabled =
-            true;
-
-
-        salvarCadastro.textContent =
-            "Salvando...";
-
-
-        try {
-
-            const cadastro = {
-                familia,
-                responsavel,
-                integrantes
-            };
-
-
-            let resposta =
-                await enviarFamilia(
-                    cadastro
-                );
-
-
-            let dados =
-                await resposta.json();
-
-
-            if (
-                resposta.status === 409 &&
-                dados.precisaConfirmacao &&
-                Array.isArray(
-                    dados.duplicados
-                )
-            ) {
-
-                if (
-                    !confirmarNomesParecidos(
-                        dados.duplicados
-                    )
-                ) {
-
-                    toast(
-                        "Cadastro não realizado. Revise os nomes."
-                    );
-
-                    return;
-
-                }
-
-
-                resposta =
-                    await enviarFamilia(
-                        cadastro,
-                        true
-                    );
-
-
-                dados =
-                    await resposta.json();
-
-            }
-
-
-            if (!resposta.ok) {
-
-                throw new Error(
-                    dados.erro ||
-                    "Não foi possível adicionar."
-                );
-
-            }
-
-
-            visitantes.push(
-                ...dados.visitantes
-            );
-
-
-            busca.value =
-                "";
-
-
-            fecharCadastro();
-
-
-            mostrarFaltam();
-
-
-            atualizarTela();
-
-
-            toast(
-                `${dados.visitantes.length} integrante(s) da família ${dados.familia} adicionado(s).`,
-                "sucesso"
-            );
-
-        }
-
-        catch (erro) {
-
-            toast(
-                erro.message,
-                "erro"
-            );
-
-        }
-
-        finally {
-
-            salvarCadastro.disabled =
-                false;
-
-
-            salvarCadastro.textContent =
-                "Salvar família";
-
-        }
-
+function bloquearCadastro(bloqueado) {
+    salvandoFamilia = bloqueado;
+    formCadastro.querySelectorAll("input, select, button").forEach(elemento => elemento.disabled = bloqueado);
+    atualizarBotoesRemover();
+    salvarCadastro.textContent = bloqueado ? "Salvando..." : familiaEmEdicao ? "Salvar alterações" : "Salvar família";
+}
+
+formCadastro.addEventListener("submit", async evento => {
+    evento.preventDefault();
+    if (salvandoFamilia) return;
+    const cadastro = {
+        familia: novaFamilia.value.trim(),
+        responsavel: novoResponsavel.value.trim(),
+        integrantes: coletarIntegrantes(),
+        ...(familiaEmEdicao || {})
+    };
+    if (!cadastro.responsavel) return toast("Digite o nome completo do responsável.", "erro");
+    if (!cadastro.integrantes.length || cadastro.integrantes.some(item => !item.nome)) {
+        return toast("Preencha o nome de todos os integrantes.", "erro");
     }
-);
-
+    bloquearCadastro(true);
+    try {
+        let resposta = await enviarFamilia(cadastro);
+        let dados = await resposta.json();
+        if (resposta.status === 409 && dados.precisaConfirmacao && Array.isArray(dados.duplicados)) {
+            if (!confirmarNomesParecidos(dados.duplicados)) {
+                toast("Revise os nomes antes de salvar.");
+                return;
+            }
+            resposta = await enviarFamilia(cadastro, true);
+            dados = await resposta.json();
+        }
+        if (!resposta.ok) {
+            if (resposta.status === 409) await carregarVisitantes(true);
+            throw new Error(dados.erro || "Não foi possível salvar a família.");
+        }
+        const porId = new Map(visitantes.map(pessoa => [String(pessoa.id), pessoa]));
+        dados.visitantes.forEach(pessoa => porId.set(String(pessoa.id), pessoa));
+        visitantes = [...porId.values()];
+        familiasAbertas.add(dados.familiaCodigo);
+        bloquearCadastro(false);
+        fecharCadastro();
+        if (!cadastro.familiaCodigo) {
+            busca.value = "";
+            mostrarFaltam();
+        }
+        atualizarTela();
+        toast(cadastro.familiaCodigo ? "Família atualizada. Novos integrantes ficam em Faltam entrar." : `${dados.visitantes.length} integrante(s) adicionado(s).`, "sucesso");
+    } catch (erro) {
+        toast(erro.message, "erro");
+    } finally {
+        bloquearCadastro(false);
+    }
+});
 
 reiniciarLinhasIntegrantes();
+
 
 
 // =====================================================
@@ -6590,11 +6235,7 @@ function abrirDesfazer(
 
 
     modalDetalhes.textContent =
-        `${
-            pessoa.tipo === "crianca"
-                ? "Criança"
-                : "Adulto"
-        } • Família: ${pessoa.familia} • Responsável: ${pessoa.responsavel} • ID: ${pessoa.codigo}`;
+        `${nomeTipo(pessoa.tipo)} • Família: ${pessoa.familia} • Responsável: ${pessoa.responsavel} • ID: ${pessoa.codigo}`;
 
 
     modalDesfazer.classList.add(
