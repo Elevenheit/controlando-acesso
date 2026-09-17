@@ -104,7 +104,8 @@ function nomesParecidos(primeiro, segundo) {
 }
 
 function limparTipo(valor) {
-    return normalizarTexto(valor) === "crianca" ? "crianca" : "adulto";
+    const tipo = normalizarTexto(valor);
+    return ["crianca", "adolescente"].includes(tipo) ? tipo : "adulto";
 }
 
 function gerarCodigo(prefixo) {
@@ -139,7 +140,7 @@ async function iniciarBanco() {
             cpf VARCHAR(64) NULL UNIQUE,
             familia VARCHAR(120) NOT NULL DEFAULT '',
             responsavel VARCHAR(120) NOT NULL DEFAULT '',
-            tipo VARCHAR(10) NOT NULL DEFAULT 'adulto',
+            tipo VARCHAR(20) NOT NULL DEFAULT 'adulto',
             codigo VARCHAR(32) NULL,
             familia_codigo VARCHAR(32) NULL,
             entrou BOOLEAN NOT NULL DEFAULT FALSE,
@@ -154,10 +155,13 @@ async function iniciarBanco() {
         ALTER TABLE pessoas
             ADD COLUMN IF NOT EXISTS familia VARCHAR(120) NOT NULL DEFAULT '',
             ADD COLUMN IF NOT EXISTS responsavel VARCHAR(120) NOT NULL DEFAULT '',
-            ADD COLUMN IF NOT EXISTS tipo VARCHAR(10) NOT NULL DEFAULT 'adulto',
+            ADD COLUMN IF NOT EXISTS tipo VARCHAR(20) NOT NULL DEFAULT 'adulto',
             ADD COLUMN IF NOT EXISTS codigo VARCHAR(32) NULL,
             ADD COLUMN IF NOT EXISTS familia_codigo VARCHAR(32) NULL
     `);
+
+    // "adolescente" tem 11 letras; amplia a coluna antiga sem apagar cadastros.
+    await pool.query("ALTER TABLE pessoas ALTER COLUMN tipo TYPE VARCHAR(20)");
 
     // Compatibilidade: conserva valores antigos, mas CPF deixa de ser exigido.
     await pool.query("ALTER TABLE pessoas ALTER COLUMN cpf DROP NOT NULL");
@@ -184,7 +188,11 @@ async function iniciarBanco() {
                 WHEN BTRIM(responsavel) = '' THEN nome
                 ELSE responsavel
             END,
-            tipo = CASE WHEN tipo = 'crianca' THEN 'crianca' ELSE 'adulto' END,
+            tipo = CASE
+                WHEN LOWER(BTRIM(tipo)) IN ('crianca', 'criança') THEN 'crianca'
+                WHEN LOWER(BTRIM(tipo)) = 'adolescente' THEN 'adolescente'
+                ELSE 'adulto'
+            END,
             codigo = COALESCE(NULLIF(codigo, ''), 'CONV-' || id::text),
             familia_codigo = COALESCE(
                 NULLIF(familia_codigo, ''),
@@ -372,15 +380,18 @@ app.get("/api/visitantes", async (req, res) => {
 // ======================================================
 
 function validarCadastroFamilia(corpo) {
-    const familia = limparTexto(corpo.familia);
     const responsavel = limparTexto(corpo.responsavel);
+    const familia = limparTexto(corpo.familia) || responsavel;
     const recebidos = Array.isArray(corpo.integrantes) ? corpo.integrantes : [];
+    if (recebidos.some(item => !["adulto", "crianca", "adolescente"].includes(normalizarTexto(item?.tipo || "adulto")))) {
+        return { erro: "Escolha Adulto, Criança ou Adolescente para cada integrante." };
+    }
     const integrantes = recebidos.map(item => ({
+        id: item?.id == null ? null : String(item.id),
         nome: limparTexto(item?.nome),
         tipo: limparTipo(item?.tipo)
     }));
 
-    if (!familia) return { erro: "Informe o nome da família." };
     if (!responsavel) return { erro: "Informe o nome completo do responsável." };
     if (integrantes.length === 0) {
         return { erro: "Adicione pelo menos um integrante." };
@@ -391,15 +402,18 @@ function validarCadastroFamilia(corpo) {
     return { familia, responsavel, integrantes };
 }
 
-async function detectarDuplicados(integrantes) {
-    const existentes = await pool.query(`
-        SELECT nome, familia, responsavel, codigo
+async function detectarDuplicados(integrantes, consulta = pool, idsIgnorados = []) {
+    const existentes = await consulta.query(`
+        SELECT id, nome, familia, responsavel, codigo
         FROM pessoas
         ORDER BY nome ASC
     `);
 
     const duplicados = [];
-    const comparados = existentes.rows.map(item => ({ ...item, origem: "banco" }));
+    const ignorados = new Set(idsIgnorados.map(String));
+    const comparados = existentes.rows
+        .filter(item => !ignorados.has(String(item.id)))
+        .map(item => ({ ...item, origem: "banco" }));
 
     for (const integrante of integrantes) {
         for (const candidato of comparados) {
@@ -484,11 +498,126 @@ async function cadastrarFamilia(req, res) {
         }
     } catch (erro) {
         console.error("Erro ao cadastrar família:", erro);
-        return res.status(500).json({ erro: "Não foi possível cadastrar a família." });
+        return res.status(500).json({ erro: mensagemErroCadastro(erro) });
     }
 }
 
 app.post("/api/familias", cadastrarFamilia);
+
+function mensagemErroCadastro(erro) {
+    if (erro.code === "23514") {
+        return "O banco recusou um dos valores. Confira se a regra da coluna tipo no Supabase permite adulto, crianca e adolescente.";
+    }
+    return "Não foi possível salvar a família. Tente novamente.";
+}
+
+// Compara somente dados cadastrais: marcar uma entrada não impede a edição.
+function retratoFamilia(pessoas) {
+    return JSON.stringify(pessoas.map(pessoa => ({
+        id: String(pessoa.id),
+        nome: pessoa.nome,
+        tipo: limparTipo(pessoa.tipo),
+        familia: pessoa.familia,
+        responsavel: pessoa.responsavel
+    })).sort((a, b) => a.id.localeCompare(b.id)));
+}
+
+app.patch("/api/familias/:familiaCodigo", async (req, res) => {
+    const corpo = req.body || {};
+    const familiaCodigo = limparTexto(req.params.familiaCodigo, 32);
+    const validacao = validarCadastroFamilia(corpo);
+    if (validacao.erro) return res.status(400).json({ erro: validacao.erro });
+    if (!familiaCodigo || !Array.isArray(corpo.originais) || !corpo.originais.length) {
+        return res.status(400).json({ erro: "Abra novamente a família para editar." });
+    }
+
+    let client;
+    try {
+        client = await pool.connect();
+        await client.query("BEGIN");
+        // Serializa edições desta família entre os computadores.
+        await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", ["familia:" + familiaCodigo]);
+        const { rows: atuais } = await client.query(
+            "SELECT * FROM pessoas WHERE familia_codigo = $1 ORDER BY id FOR UPDATE",
+            [familiaCodigo]
+        );
+        const recusar = async (status, erro) => {
+            await client.query("ROLLBACK");
+            return res.status(status).json({ erro });
+        };
+        if (!atuais.length) return await recusar(404, "Família não encontrada.");
+        if (retratoFamilia(atuais.map(linhaParaVisitante)) !== retratoFamilia(corpo.originais)) {
+            return await recusar(409, "Esta família foi alterada em outro computador ou no banco. Feche e abra a edição novamente para carregar os dados atuais.");
+        }
+
+        const porId = new Map(atuais.map(pessoa => [String(pessoa.id), pessoa]));
+        const idsRecebidos = validacao.integrantes.filter(item => item.id).map(item => item.id);
+        if (new Set(idsRecebidos).size !== idsRecebidos.length ||
+            idsRecebidos.some(id => !porId.has(id)) || idsRecebidos.length !== atuais.length) {
+            return await recusar(400, "Os integrantes existentes devem continuar na mesma família. Reabra a edição.");
+        }
+
+        const nomesAlterados = validacao.integrantes.filter(item =>
+            !item.id || item.nome !== porId.get(item.id).nome
+        );
+        if (corpo.confirmarDuplicados !== true && nomesAlterados.length) {
+            const duplicados = await detectarDuplicados(nomesAlterados, client, nomesAlterados.filter(item => item.id).map(item => item.id));
+            if (duplicados.length) {
+                await client.query("ROLLBACK");
+                return res.status(409).json({
+                    erro: "Encontramos nomes iguais ou escritos de forma parecida.",
+                    precisaConfirmacao: true,
+                    duplicados
+                });
+            }
+        }
+
+        // Quando o título era o próprio responsável, acompanha a troca do nome.
+        if (validacao.familia === atuais[0].familia && atuais[0].familia === atuais[0].responsavel) {
+            validacao.familia = validacao.responsavel;
+        }
+        await client.query(
+            "UPDATE pessoas SET familia = $2, responsavel = $3 WHERE familia_codigo = $1",
+            [familiaCodigo, validacao.familia, validacao.responsavel]
+        );
+        for (const integrante of validacao.integrantes) {
+            if (integrante.id) {
+                // Conserva ID, código, entrada e horário já registrados.
+                await client.query(
+                    "UPDATE pessoas SET nome = $3, tipo = $4 WHERE id::text = $1 AND familia_codigo = $2",
+                    [integrante.id, familiaCodigo, integrante.nome, integrante.tipo]
+                );
+            } else {
+                await client.query(`
+                    INSERT INTO pessoas (
+                        nome, familia, responsavel, tipo, codigo, familia_codigo,
+                        entrou, horario, data_entrada, timestamp_entrada
+                    ) VALUES ($1, $2, $3, $4, $5, $6, FALSE, '', '', NULL)
+                `, [integrante.nome, validacao.familia, validacao.responsavel,
+                    integrante.tipo, gerarCodigo("CONV"), familiaCodigo]);
+            }
+        }
+        const { rows } = await client.query(
+            "SELECT * FROM pessoas WHERE familia_codigo = $1 ORDER BY id",
+            [familiaCodigo]
+        );
+        await client.query("COMMIT");
+        avisarTodos();
+        return res.json({
+            familia: validacao.familia,
+            responsavel: validacao.responsavel,
+            familiaCodigo,
+            visitantes: rows.map(linhaParaVisitante)
+        });
+    } catch (erro) {
+        if (client) await client.query("ROLLBACK").catch(() => {});
+        console.error("Erro ao editar família:", erro);
+        return res.status(500).json({ erro: mensagemErroCadastro(erro) });
+    } finally {
+        client?.release();
+    }
+});
+
 
 // Compatibilidade com clientes antigos da rota individual.
 app.post("/api/visitantes", async (req, res) => {
@@ -641,15 +770,16 @@ app.patch("/api/visitantes/:id/status", async (req, res) => {
 // ======================================================
 
 function formatarTipo(tipo) {
-    return tipo === "crianca" ? "Criança" : "Adulto";
+    return { adulto: "Adulto", crianca: "Criança", adolescente: "Adolescente" }[limparTipo(tipo)];
 }
 
 function adicionarSecaoRelatorio(linhas, titulo, pessoas, formatarData) {
     const adultos = pessoas.filter(pessoa => pessoa.tipo === "adulto").length;
-    const criancas = pessoas.length - adultos;
+    const criancas = pessoas.filter(pessoa => pessoa.tipo === "crianca").length;
+    const adolescentes = pessoas.filter(pessoa => pessoa.tipo === "adolescente").length;
     linhas.push("===============================================");
     linhas.push(`${titulo} (${pessoas.length})`);
-    linhas.push(`Adultos: ${adultos} | Crianças: ${criancas}`);
+    linhas.push(`Adultos: ${adultos} | Crianças: ${criancas} | Adolescentes: ${adolescentes}`);
     linhas.push("===============================================");
     linhas.push("");
 
